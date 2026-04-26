@@ -82,14 +82,35 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
 .recommend {
-  background: linear-gradient(135deg, rgba(78,201,104,0.12) 0%, rgba(78,201,104,0.04) 100%);
-  border: 1px solid rgba(78,201,104,0.3);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px; padding: 14px;
   margin-bottom: 12px;
 }
-.recommend .head { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.recommend .when { font-size: 17px; font-weight: 600; margin-top: 6px; }
-.recommend .detail { font-size: 12px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+.recommend .head { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+.option {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  transition: all 0.15s;
+}
+.option:last-child { margin-bottom: 0; }
+.option.best {
+  background: linear-gradient(135deg, rgba(78,201,104,0.12) 0%, rgba(78,201,104,0.04) 100%);
+  border-color: rgba(78,201,104,0.4);
+}
+.opt-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.opt-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.badge {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  background: var(--green); color: #0a3d12; padding: 2px 7px; border-radius: 5px;
+}
+.opt-when { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
+.opt-detail { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+.opt-detail strong { color: var(--text); }
 
 .car-toggle { display: flex; gap: 6px; background: var(--surface); padding: 4px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); }
 .car-toggle button {
@@ -338,8 +359,11 @@ async function loadPrices() {
 
 // ============================================================
 // FIND BEDSTE LADEVINDUE
+// Returnerer både:
+//  - sammenhængende vindue (bil tilkoblet uafbrudt)
+//  - split vindue (lader i flere kortere sessioner over flere nætter)
 // ============================================================
-function findBestChargingWindow(carKey) {
+function findChargingWindows(carKey) {
   const car = CONFIG.cars[carKey];
   const hoursNeeded = Math.ceil(car.battery / CONFIG.charger_kw);
 
@@ -351,40 +375,80 @@ function findBestChargingWindow(carKey) {
 
   if (allPrices.length < hoursNeeded) return null;
 
-  let best = null;
+  // ----- Sammenhængende vindue -----
+  let contiguous = null;
   for (let i = 0; i <= allPrices.length - hoursNeeded; i++) {
     const window = allPrices.slice(i, i + hoursNeeded);
-    // Tjek at timerne er sammenhængende
     let consecutive = true;
     for (let j = 1; j < window.length; j++) {
       const diffMs = window[j].time - window[j-1].time;
       if (diffMs > 60*60*1000 + 1000) { consecutive = false; break; }
     }
     if (!consecutive) continue;
-
     const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
-    if (!best || avg < best.avg) {
-      best = {
+    if (!contiguous || avg < contiguous.avg) {
+      contiguous = {
         avg,
+        hours: [...window],
         start: window[0].time,
         end: new Date(window[window.length-1].time.getTime() + 60*60*1000),
-        hours: window.length
+        hoursCount: window.length
       };
     }
   }
 
-  // Beregn besparelse vs. dyreste tilsvarende vindue
-  if (best) {
-    let worstAvg = 0;
-    for (let i = 0; i <= allPrices.length - hoursNeeded; i++) {
-      const window = allPrices.slice(i, i + hoursNeeded);
-      const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
-      if (avg > worstAvg) worstAvg = avg;
+  // ----- Split vindue: vælg simpelthen de N billigste timer -----
+  // Sortér efter pris, tag de N billigste, og grupér dem så de kan vises som blokke
+  const cheapestHours = [...allPrices].sort((a, b) => a.total - b.total).slice(0, hoursNeeded);
+  cheapestHours.sort((a, b) => a.time - b.time);
+  const splitAvg = cheapestHours.reduce((s, p) => s + p.total, 0) / cheapestHours.length;
+
+  // Grupér sammenhængende timer i blokke (for visning)
+  const blocks = [];
+  let currentBlock = [cheapestHours[0]];
+  for (let i = 1; i < cheapestHours.length; i++) {
+    const diff = cheapestHours[i].time - cheapestHours[i-1].time;
+    if (diff <= 60*60*1000 + 1000) {
+      currentBlock.push(cheapestHours[i]);
+    } else {
+      blocks.push(currentBlock);
+      currentBlock = [cheapestHours[i]];
     }
-    best.savings = (worstAvg - best.avg) * car.battery;
-    best.totalCost = best.avg * car.battery;
   }
-  return best;
+  blocks.push(currentBlock);
+
+  const split = {
+    avg: splitAvg,
+    hours: cheapestHours,
+    blocks: blocks.map(b => ({
+      start: b[0].time,
+      end: new Date(b[b.length-1].time.getTime() + 60*60*1000),
+      hoursCount: b.length
+    })),
+    hoursCount: cheapestHours.length
+  };
+
+  // ----- Worst case for besparelses-beregning -----
+  let worstAvg = 0;
+  for (let i = 0; i <= allPrices.length - hoursNeeded; i++) {
+    const window = allPrices.slice(i, i + hoursNeeded);
+    const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
+    if (avg > worstAvg) worstAvg = avg;
+  }
+
+  if (contiguous) {
+    contiguous.totalCost = contiguous.avg * car.battery;
+    contiguous.savings = (worstAvg - contiguous.avg) * car.battery;
+  }
+  split.totalCost = split.avg * car.battery;
+  split.savings = (worstAvg - split.avg) * car.battery;
+  split.savingsVsContiguous = contiguous ? (contiguous.avg - split.avg) * car.battery : 0;
+
+  // Anbefal split hvis det sparer mere end 5 kr i forhold til sammenhængende
+  // ELLER hvis sammenhængende ikke kunne findes
+  const recommendSplit = !contiguous || split.savingsVsContiguous > 5;
+
+  return { contiguous, split, recommendSplit, hoursNeeded };
 }
 
 // ============================================================
@@ -402,7 +466,7 @@ function categoryColor(cat) {
   return cat === 'low' ? 'var(--green)' : cat === 'high' ? 'var(--red)' : 'var(--orange)';
 }
 
-function renderChart(svgId, prices, isToday) {
+function renderChart(svgId, prices, isToday, selectedHours) {
   const svg = document.getElementById(svgId);
   svg.innerHTML = '';
   if (!prices || prices.length === 0) {
@@ -465,6 +529,18 @@ function renderChart(svgId, prices, isToday) {
     rect.addEventListener('mouseleave', hideTooltip);
 
     svg.appendChild(rect);
+
+    // Marker valgte ladetimer med en lille blå understreg
+    if (selectedHours && selectedHours.some(h => h.time.getTime() === p.time.getTime())) {
+      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      marker.setAttribute('x', x);
+      marker.setAttribute('y', padTop + chartH + 2);
+      marker.setAttribute('width', actualBarW);
+      marker.setAttribute('height', 3);
+      marker.setAttribute('fill', '#3b82f6');
+      marker.setAttribute('rx', '1.5');
+      svg.appendChild(marker);
+    }
   });
 
   // Hour labels - kl. 0, 6, 12, 18
@@ -554,33 +630,79 @@ function render() {
     document.getElementById('day2-stats').textContent = 'kommer kl. 13';
   }
 
-  renderChart('chart-today', state.prices.today, true);
-  renderChart('chart-tomorrow', state.prices.tomorrow, false);
+  // Find valgte ladetimer for at markere dem i søjlediagrammet
+  const result = findChargingWindows(state.selectedCar);
+  let selectedHours = [];
+  if (result) {
+    selectedHours = result.recommendSplit
+      ? result.split.hours
+      : (result.contiguous ? result.contiguous.hours : []);
+  }
+
+  renderChart('chart-today', state.prices.today, true, selectedHours);
+  renderChart('chart-tomorrow', state.prices.tomorrow, false, selectedHours);
 
   renderRecommendation();
 }
 
 function renderRecommendation() {
   const car = CONFIG.cars[state.selectedCar];
-  const best = findBestChargingWindow(state.selectedCar);
+  const result = findChargingWindows(state.selectedCar);
   const el = document.getElementById('recommendation');
-  if (!best) {
+
+  if (!result) {
     el.innerHTML = `<div class="head">Bedste ladevindue</div><div class="when">Ikke nok data</div><div class="detail">Vent på morgendagens priser kl. 13.</div>`;
     return;
   }
 
-  const sameDay = best.start.toDateString() === new Date().toDateString();
-  const dayPrefix = sameDay ? 'I dag' : formatDayName(best.start);
-  const startStr = formatTime(best.start);
-  const endStr = formatTime(best.end);
+  const { contiguous, split, recommendSplit, hoursNeeded } = result;
+  const now = new Date();
+
+  // Hjælpefunktion til at formatere en blok
+  const formatBlock = (block) => {
+    const sameDay = block.start.toDateString() === now.toDateString();
+    const dayPrefix = sameDay ? 'I dag' : formatDayName(block.start);
+    return `${dayPrefix} ${formatTime(block.start)}–${formatTime(block.end)}`;
+  };
+
+  // Bygger HTML for begge anbefalinger
+  let contiguousHtml = '';
+  if (contiguous) {
+    const sameDay = contiguous.start.toDateString() === now.toDateString();
+    const dayPrefix = sameDay ? 'I dag' : formatDayName(contiguous.start);
+    contiguousHtml = `
+      <div class="option ${recommendSplit ? '' : 'best'}">
+        <div class="opt-head">
+          <span class="opt-title">🔌 Sammenhængende</span>
+          ${!recommendSplit ? '<span class="badge">Anbefalet</span>' : ''}
+        </div>
+        <div class="opt-when">${dayPrefix} · ${formatTime(contiguous.start)}–${formatTime(contiguous.end)} (${contiguous.hoursCount}t)</div>
+        <div class="opt-detail">
+          Snit ${formatPrice(contiguous.avg)}/kWh · ca. <strong>${contiguous.totalCost.toFixed(0)} kr</strong> for fuld opladning
+        </div>
+      </div>
+    `;
+  }
+
+  const splitBlocksText = split.blocks.map(formatBlock).join(' + ');
+  const splitHtml = `
+    <div class="option ${recommendSplit ? 'best' : ''}">
+      <div class="opt-head">
+        <span class="opt-title">⚡ Opdelt (billigste timer)</span>
+        ${recommendSplit ? '<span class="badge">Anbefalet</span>' : ''}
+      </div>
+      <div class="opt-when">${splitBlocksText}</div>
+      <div class="opt-detail">
+        Snit ${formatPrice(split.avg)}/kWh · ca. <strong>${split.totalCost.toFixed(0)} kr</strong> for fuld opladning
+        ${split.savingsVsContiguous > 0 ? `<br><span style="color:var(--green)">Sparer ${split.savingsVsContiguous.toFixed(0)} kr vs. sammenhængende</span>` : ''}
+      </div>
+    </div>
+  `;
 
   el.innerHTML = `
-    <div class="head">⚡ Bedste ladevindue (${car.label})</div>
-    <div class="when">${dayPrefix} · ${startStr} – ${endStr}</div>
-    <div class="detail">
-      Snit ${formatPrice(best.avg)}/kWh · Fuld opladning ca. ${best.totalCost.toFixed(0)} kr<br>
-      Sparer ca. <strong style="color:var(--green)">${best.savings.toFixed(0)} kr</strong> vs. dyreste vindue
-    </div>
+    <div class="head">⚡ Ladning af ${car.label} · ${hoursNeeded}t total</div>
+    ${contiguousHtml}
+    ${splitHtml}
   `;
 }
 
@@ -603,7 +725,7 @@ function speak() {
   }
 
   const car = CONFIG.cars[state.selectedCar];
-  const best = findBestChargingWindow(state.selectedCar);
+  const result = findChargingWindows(state.selectedCar);
   const now = new Date();
   const currentPrice = state.prices.today.find(p =>
     p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
@@ -615,13 +737,31 @@ function speak() {
                     currentPrice.category === 'high' ? 'en dyr periode' : 'en mellem pris';
     text += `Elprisen lige nu er ${currentPrice.total.toFixed(2).replace('.', ' komma ')} kroner per kilowatt-time. Det er ${catText}. `;
   }
-  if (best) {
-    const sameDay = best.start.toDateString() === now.toDateString();
-    const dayPrefix = sameDay ? 'i dag' : 'i morgen';
-    text += `Bedste ladevindue for ${car.name} er ${dayPrefix} fra klokken ${best.start.getHours()} til klokken ${best.end.getHours()}. `;
-    text += `Gennemsnitlig pris ${best.avg.toFixed(2).replace('.', ' komma ')} kroner per kilowatt-time. `;
-    text += `En fuld opladning vil koste cirka ${Math.round(best.totalCost)} kroner, `;
-    text += `og du sparer cirka ${Math.round(best.savings)} kroner i forhold til de dyreste timer.`;
+
+  if (result) {
+    const { contiguous, split, recommendSplit, hoursNeeded } = result;
+    text += `${car.name} skal bruge ${hoursNeeded} timer i alt. `;
+
+    if (recommendSplit) {
+      text += `Jeg anbefaler at lade i flere omgange for at fange de billigste timer. `;
+      split.blocks.forEach((b, i) => {
+        const sameDay = b.start.toDateString() === now.toDateString();
+        const dayPrefix = sameDay ? 'i dag' : 'i morgen';
+        const connector = i === 0 ? '' : i === split.blocks.length - 1 ? ' og derefter ' : ', dernæst ';
+        text += `${connector}${dayPrefix} fra klokken ${b.start.getHours()} til klokken ${b.end.getHours()}`;
+      });
+      text += `. Gennemsnitspris ${split.avg.toFixed(2).replace('.', ' komma ')} kroner. `;
+      text += `Fuld opladning koster cirka ${Math.round(split.totalCost)} kroner, `;
+      if (split.savingsVsContiguous > 0) {
+        text += `hvilket er ${Math.round(split.savingsVsContiguous)} kroner billigere end at lade sammenhængende. `;
+      }
+    } else if (contiguous) {
+      const sameDay = contiguous.start.toDateString() === now.toDateString();
+      const dayPrefix = sameDay ? 'i dag' : 'i morgen';
+      text += `Bedste ladevindue er ${dayPrefix} fra klokken ${contiguous.start.getHours()} til klokken ${contiguous.end.getHours()}. `;
+      text += `Gennemsnitspris ${contiguous.avg.toFixed(2).replace('.', ' komma ')} kroner per kilowatt-time. `;
+      text += `Fuld opladning koster cirka ${Math.round(contiguous.totalCost)} kroner.`;
+    }
   }
 
   const utterance = new SpeechSynthesisUtterance(text);

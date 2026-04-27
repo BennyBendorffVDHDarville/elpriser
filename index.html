@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Elpris Planlægger</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a1a1a'/%3E%3Ctext x='50' y='65' font-size='55' text-anchor='middle' fill='%2397C459'%3E⚡%3C/text%3E%3C/svg%3E">
+<title>Lade Planlægger</title>
+<link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Lade Planl%C3%A6gger","short_name":"Ladning","start_url":".","display":"standalone","background_color":"%231a1a1a","theme_color":"%231a1a1a"}'>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a1a1a'/%3E%3Ctext x='50' y='65' font-size='55' text-anchor='middle' fill='%234ec968'%3E⚡%3C/text%3E%3C/svg%3E">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root {
@@ -23,6 +23,8 @@
   --orange: #f5a623;
   --red: #ef4444;
   --blue: #3b82f6;
+  --kona: #4ec968;
+  --ex60: #3b82f6;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -33,6 +35,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 .app { max-width: 480px; margin: 0 auto; padding: 16px 14px 30px; }
+
 header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
 .title h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
 .title p { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
@@ -51,6 +54,7 @@ header { display: flex; justify-content: space-between; align-items: flex-start;
 .card .sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .card.green .value { color: var(--green); }
 .card.red .value { color: var(--red); }
+.card.orange .value { color: var(--orange); }
 
 .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
 button {
@@ -68,13 +72,16 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .section-title {
   font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px;
   margin: 18px 4px 8px;
+  display: flex; justify-content: space-between; align-items: baseline;
 }
+.section-title .meta { font-size: 10px; color: var(--text-dim); text-transform: none; letter-spacing: 0.2px; }
 
 .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px 8px; margin-bottom: 12px; }
 .chart-header { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 8px; }
 .chart-header .day { font-size: 14px; font-weight: 600; }
 .chart-header .stats { font-size: 11px; color: var(--text-dim); }
 .chart-wrap { position: relative; width: 100%; height: 170px; }
+.chart-wrap.tall { height: 200px; }
 .chart-wrap svg { width: 100%; height: 100%; display: block; }
 
 .legend { display: flex; gap: 12px; justify-content: center; padding: 8px 0 4px; font-size: 11px; color: var(--text-dim); flex-wrap: wrap; }
@@ -82,8 +89,12 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .legend i.charge-marker {
   width: 14px; height: 3px; border-radius: 1.5px;
-  background: #3b82f6;
+  background: var(--blue);
   margin-top: 2px;
+}
+.legend i.dashed {
+  background: transparent;
+  border: 1px dashed var(--text-dim);
 }
 
 .recommend {
@@ -93,6 +104,7 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
   margin-bottom: 12px;
 }
 .recommend .head { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.recommend .head .badge-best { background: var(--green); color: #0a3d12; padding: 2px 7px; border-radius: 5px; font-size: 9px; }
 
 .option {
   background: var(--surface-2);
@@ -113,9 +125,14 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
   font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   background: var(--green); color: #0a3d12; padding: 2px 7px; border-radius: 5px;
 }
+.badge.weekend { background: var(--green); color: #0a3d12; }
+.badge.weekday { background: var(--orange); color: #3d2710; }
+.badge.wind { background: var(--blue); color: white; }
 .opt-when { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
 .opt-detail { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
 .opt-detail strong { color: var(--text); }
+.opt-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.opt-tags .badge { font-size: 9px; }
 
 .car-toggle { display: flex; gap: 6px; background: var(--surface); padding: 4px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); }
 .car-toggle button {
@@ -123,6 +140,104 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
   font-size: 13px; color: var(--text-dim); border-radius: 7px;
 }
 .car-toggle button.active { background: var(--surface-2); color: var(--text); }
+.car-toggle button.active.kona { color: var(--green); }
+.car-toggle button.active.ex60 { color: var(--blue); }
+
+.soc-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.soc-row .soc-label { font-size: 12px; color: var(--text-dim); }
+.soc-row .soc-label strong { color: var(--text); font-weight: 500; }
+.soc-row .soc-input-wrap { display: flex; align-items: center; gap: 6px; }
+.soc-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  width: 56px;
+  text-align: right;
+}
+.soc-input-wrap .pct { font-size: 13px; color: var(--text-dim); }
+
+.settings-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.settings-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: none;
+}
+.settings-panel.open { display: block; }
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row .lbl { font-size: 12px; color: var(--text-dim); flex: 1; }
+.settings-row input[type="number"] {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  width: 70px;
+  text-align: right;
+}
+.settings-row select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  max-width: 180px;
+  flex: 1;
+}
+.settings-row .test-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  flex: 0;
+}
 
 .error {
   background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
@@ -139,6 +254,7 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .bar { transition: opacity 0.2s; cursor: pointer; }
 .bar:hover { opacity: 0.85; }
 .bar.now { stroke: var(--blue); stroke-width: 1.5; stroke-dasharray: 3,2; }
+.bar.forecast { stroke: rgba(255,255,255,0.3); stroke-width: 0.5; stroke-dasharray: 2,2; }
 
 .tooltip {
   position: absolute; background: var(--surface-2); border: 1px solid var(--border);
@@ -149,16 +265,33 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .tooltip strong { color: var(--text); }
 .tooltip span { color: var(--text-dim); }
 
+.sources {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  font-size: 10px; color: var(--text-dim);
+  margin-top: 12px;
+  justify-content: center;
+}
+.source {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.source-dot { width: 5px; height: 5px; border-radius: 50%; }
+.source-dot.ok { background: var(--green); }
+.source-dot.fail { background: var(--red); }
+.source-dot.fallback { background: var(--orange); }
+
 footer { text-align: center; padding: 20px 0 4px; font-size: 10px; color: var(--text-dim); line-height: 1.6; }
-footer a { color: var(--text-dim); text-decoration: none; }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <div class="title">
-      <h1>⚡ Elpris Planlægger</h1>
-      <p>DK2 · Næstved · Cerius · NRGi Time</p>
+      <h1>⚡ Lade Planlægger</h1>
+      <p>DK2 · Næstved · Spotpris + Carnot</p>
     </div>
     <div class="location">
       <strong id="now-time">--:--</strong>
@@ -167,7 +300,7 @@ footer a { color: var(--text-dim); text-decoration: none; }
   </header>
 
   <div id="error" class="error" style="display:none;"></div>
-  <div id="loading" class="loading">Henter elpriser…</div>
+  <div id="loading" class="loading">Henter data for Næstved…</div>
 
   <div id="content" style="display:none;">
     <div class="cards-row">
@@ -184,8 +317,18 @@ footer a { color: var(--text-dim); text-decoration: none; }
     </div>
 
     <div class="car-toggle">
-      <button data-car="kona" class="active">Kona 60 kWh</button>
-      <button data-car="ex60">EX60 117 kWh</button>
+      <button data-car="kona" class="active kona">Kona 60 kWh</button>
+      <button data-car="ex60" class="ex60">EX60 117 kWh</button>
+    </div>
+
+    <div class="soc-row">
+      <div class="soc-label">
+        <span id="soc-car-name">Kona</span> nu: <strong id="soc-display">–</strong>
+      </div>
+      <div class="soc-input-wrap">
+        <input type="number" class="soc-input" id="soc-input" min="0" max="100" value="10">
+        <span class="pct">%</span>
+      </div>
     </div>
 
     <div id="recommendation" class="recommend"></div>
@@ -199,20 +342,57 @@ footer a { color: var(--text-dim); text-decoration: none; }
       </button>
     </div>
 
-    <div class="section-title">I dag</div>
+    <button class="settings-toggle" id="settings-toggle">
+      ⚙ Indstillinger (afgifter, stemme)
+    </button>
+
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-row">
+        <span class="lbl">Mål for opladning (%)</span>
+        <input type="number" id="targetSoc" value="80" step="5" min="50" max="100">
+      </div>
+      <div class="settings-row">
+        <span class="lbl">Fast tillæg (kr/kWh)</span>
+        <input type="number" id="surcharge" value="1.20" step="0.01" min="0">
+      </div>
+      <div class="settings-row">
+        <span class="lbl">Moms (%)</span>
+        <input type="number" id="vat" value="25" step="1" min="0">
+      </div>
+      <div class="settings-row">
+        <span class="lbl">Stemme</span>
+        <select id="voiceSelect"></select>
+      </div>
+      <div class="settings-row">
+        <span class="lbl">Tale-hastighed</span>
+        <input type="number" id="ttsRate" value="0.85" step="0.05" min="0.5" max="1.5">
+      </div>
+      <div class="settings-row">
+        <span class="lbl">Test stemme</span>
+        <button class="test-btn" id="ttsTestBtn">▶ Afspil</button>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>I dag</span>
+      <span class="meta" id="day1-stats">–</span>
+    </div>
     <div class="chart-card">
       <div class="chart-header">
         <span class="day" id="day1-label">–</span>
-        <span class="stats" id="day1-stats">–</span>
+        <span class="stats">timer · kr/kWh</span>
       </div>
       <div class="chart-wrap"><svg id="chart-today" viewBox="0 0 480 170" preserveAspectRatio="none"></svg></div>
     </div>
 
-    <div class="section-title">I morgen</div>
+    <div class="section-title">
+      <span>I morgen</span>
+      <span class="meta" id="day2-stats">–</span>
+    </div>
     <div class="chart-card">
       <div class="chart-header">
         <span class="day" id="day2-label">–</span>
-        <span class="stats" id="day2-stats">–</span>
+        <span class="stats">timer · kr/kWh</span>
       </div>
       <div class="chart-wrap"><svg id="chart-tomorrow" viewBox="0 0 480 170" preserveAspectRatio="none"></svg></div>
     </div>
@@ -221,258 +401,322 @@ footer a { color: var(--text-dim); text-decoration: none; }
       <span><i style="background:var(--green)"></i>Billigt</span>
       <span><i style="background:var(--orange)"></i>Mellem</span>
       <span><i style="background:var(--red)"></i>Dyrt</span>
+      <span><i class="dashed"></i>Prognose</span>
       <span><i class="charge-marker"></i>Lad her</span>
     </div>
+
+    <div class="section-title">
+      <span>Pris pr. dag — 7 dage</span>
+      <span class="meta">Carnot prognose dag 3-7</span>
+    </div>
+    <div class="chart-card">
+      <div class="chart-wrap"><svg id="chart-week" viewBox="0 0 480 170" preserveAspectRatio="none"></svg></div>
+    </div>
+
+    <div class="section-title">
+      <span>Vind pr. dag — 7 dage</span>
+      <span class="meta">m/s ved 100m</span>
+    </div>
+    <div class="chart-card">
+      <div class="chart-wrap"><svg id="chart-wind" viewBox="0 0 480 170" preserveAspectRatio="none"></svg></div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>Lav</span>
+      <span><i style="background:var(--orange)"></i>Middel</span>
+      <span><i style="background:var(--red)"></i>Høj</span>
+    </div>
+
+    <div class="sources" id="sources"></div>
   </div>
 
   <div id="tooltip" class="tooltip"></div>
 
   <footer>
-    Spotpris fra elprisenligenu.dk · Tariffer Cerius 2026 · Tillæg NRGi Time<br>
-    Priser inkl. moms · Sidst opdateret <span id="last-update">–</span>
+    Spotpris fra elprisenligenu.dk · Carnot prognose dag 3-7 · Vind fra Open-Meteo<br>
+    Priser inkl. tillæg + moms · Sidst opdateret <span id="last-update">–</span>
   </footer>
 </div>
 
 <script>
 // ============================================================
-// KONFIGURATION - tilpas her hvis priser ændres
+// KONFIGURATION
 // ============================================================
-const CONFIG = {
-  region: 'DK2',
-  // Cerius nettarif 2026 - inkl. moms (kr/kWh)
-  // Vinter: 1. okt - 31. mar, Sommer: 1. apr - 30. sep
-  cerius: {
-    winter: { lavlast: 0.1325, hojlast: 0.3975, spidslast: 1.1925 },
-    summer: { lavlast: 0.1325, hojlast: 0.1988, spidslast: 0.1988 }
-  },
-  // Energinet systemtarif + transmissionstarif 2026 inkl. moms (kr/kWh)
-  energinet: 0.0875,
-  // Elafgift 2026 - sat ned til EU minimum (kr/kWh inkl. moms)
-  elafgift: 0.01,
-  // NRGi Time tillæg pr. 1. feb 2026 inkl. moms (kr/kWh)
-  nrgi_tillaeg: 0.09,
-  // Biler
-  cars: {
-    kona: { name: 'Kona Electric', battery: 60, label: 'Kona 60 kWh' },
-    ex60: { name: 'Volvo EX60', battery: 117, label: 'EX60 117 kWh' }
-  },
-  charger_kw: 10
+const CARNOT_PROXY = 'https://elpris-proxy.vdhfjernsyn1.workers.dev';
+const REGION = 'DK2';
+const NAESTVED = { lat: 55.23, lon: 11.76 };
+
+const CARS = {
+  kona: { name: 'Kona', fullName: 'Hyundai Kona', battery: 60, label: 'Kona 60 kWh', power: 11 },
+  ex60: { name: 'EX60', fullName: 'Volvo EX60', battery: 117, label: 'EX60 117 kWh', power: 11 }
 };
 
-let state = {
-  prices: { today: [], tomorrow: [] },
-  selectedCar: 'kona',
+const STATE = {
+  prices: { today: [], tomorrow: [], forecast: [] },
+  wind: null,
+  selectedCar: localStorage.getItem('selectedCar') || 'kona',
+  socKona: parseInt(localStorage.getItem('socKona')) || 10,
+  socEx60: parseInt(localStorage.getItem('socEx60')) || 25,
+  targetSoc: parseInt(localStorage.getItem('targetSoc')) || 80,
+  surcharge: parseFloat(localStorage.getItem('surcharge')) || 1.20,
+  vat: parseFloat(localStorage.getItem('vat')) || 25,
+  voiceURI: localStorage.getItem('voiceURI') || '',
+  ttsRate: parseFloat(localStorage.getItem('ttsRate')) || 0.85,
+  sources: {},
   loaded: false
 };
 
 // ============================================================
-// PRIS-BEREGNING
+// HELPERS
 // ============================================================
-function getCeriusTariff(date) {
-  const month = date.getMonth(); // 0=jan, 11=dec
-  const hour = date.getHours();
-  const isWinter = (month >= 9 || month <= 2); // okt-mar
-  const rates = isWinter ? CONFIG.cerius.winter : CONFIG.cerius.summer;
-
-  if (hour >= 0 && hour < 6) return rates.lavlast;
-  if (isWinter && hour >= 17 && hour < 21) return rates.spidslast;
-  return rates.hojlast;
+function applyTariffs(spotPrice) {
+  return (spotPrice + STATE.surcharge) * (1 + STATE.vat / 100);
 }
 
-function calculateTotalPrice(spotPriceWithoutVAT, date) {
-  // spotpris er ekskl. moms fra API'et
-  const spotInclVAT = spotPriceWithoutVAT * 1.25;
-  const cerius = getCeriusTariff(date);
-  const energinet = CONFIG.energinet;
-  const elafgift = CONFIG.elafgift;
-  const tillaeg = CONFIG.nrgi_tillaeg;
-  return spotInclVAT + cerius + energinet + elafgift + tillaeg;
-}
-
-function categorizePrice(prices) {
-  const sorted = [...prices].sort((a, b) => a.total - b.total);
-  const n = sorted.length;
-  const lowThreshold = sorted[Math.floor(n / 3)]?.total ?? 0;
-  const highThreshold = sorted[Math.floor(2 * n / 3)]?.total ?? 0;
-
-  return prices.map(p => ({
-    ...p,
-    category: p.total <= lowThreshold ? 'low' : p.total >= highThreshold ? 'high' : 'mid'
-  }));
-}
-
-// ============================================================
-// HENT PRISER
-// ============================================================
-function formatDateForAPI(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}/${m}-${d}`;
-}
-
-async function fetchPricesForDate(date) {
-  const url = `https://www.elprisenligenu.dk/api/v1/prices/${formatDateForAPI(date)}_${CONFIG.region}.json`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Kunne ikke hente priser: ${resp.status}`);
-  const data = await resp.json();
-  return data.map(item => {
-    const start = new Date(item.time_start);
-    return {
-      time: start,
-      hour: start.getHours(),
-      spotExVAT: item.DKK_per_kWh,
-      total: calculateTotalPrice(item.DKK_per_kWh, start)
-    };
-  });
-}
-
-async function loadPrices() {
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('content').style.display = 'none';
-  document.getElementById('error').style.display = 'none';
-
-  try {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const todayPrices = await fetchPricesForDate(today);
-    let tomorrowPrices = [];
-    try {
-      tomorrowPrices = await fetchPricesForDate(tomorrow);
-    } catch (e) {
-      console.warn('Morgendagens priser ikke tilgængelige endnu (kommer kl. 13)');
-    }
-
-    state.prices.today = categorizePrice(todayPrices);
-    state.prices.tomorrow = categorizePrice(tomorrowPrices);
-    state.loaded = true;
-    lastFetchedDate = today.toDateString();
-    lastFetchedHour = today.getHours();
-    document.getElementById('last-update').textContent = formatTime(new Date());
-
-    render();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-  } catch (err) {
-    document.getElementById('loading').style.display = 'none';
-    const errEl = document.getElementById('error');
-    errEl.style.display = 'block';
-    errEl.textContent = '⚠️ Kunne ikke hente elpriser. Tjek internetforbindelse. ' + err.message;
-  }
-}
-
-// ============================================================
-// FIND BEDSTE LADEVINDUE
-// Returnerer både:
-//  - sammenhængende vindue (bil tilkoblet uafbrudt)
-//  - split vindue (lader i flere kortere sessioner over flere nætter)
-// ============================================================
-function findChargingWindows(carKey) {
-  const car = CONFIG.cars[carKey];
-  const hoursNeeded = Math.ceil(car.battery / CONFIG.charger_kw);
-
-  const now = new Date();
-  const allPrices = [
-    ...state.prices.today.filter(p => p.time >= new Date(now.getTime() - 60*60*1000)),
-    ...state.prices.tomorrow
-  ].sort((a, b) => a.time - b.time);
-
-  if (allPrices.length < hoursNeeded) return null;
-
-  // ----- Sammenhængende vindue -----
-  let contiguous = null;
-  for (let i = 0; i <= allPrices.length - hoursNeeded; i++) {
-    const window = allPrices.slice(i, i + hoursNeeded);
-    let consecutive = true;
-    for (let j = 1; j < window.length; j++) {
-      const diffMs = window[j].time - window[j-1].time;
-      if (diffMs > 60*60*1000 + 1000) { consecutive = false; break; }
-    }
-    if (!consecutive) continue;
-    const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
-    if (!contiguous || avg < contiguous.avg) {
-      contiguous = {
-        avg,
-        hours: [...window],
-        start: window[0].time,
-        end: new Date(window[window.length-1].time.getTime() + 60*60*1000),
-        hoursCount: window.length
-      };
-    }
-  }
-
-  // ----- Split vindue: vælg simpelthen de N billigste timer -----
-  // Sortér efter pris, tag de N billigste, og grupér dem så de kan vises som blokke
-  const cheapestHours = [...allPrices].sort((a, b) => a.total - b.total).slice(0, hoursNeeded);
-  cheapestHours.sort((a, b) => a.time - b.time);
-  const splitAvg = cheapestHours.reduce((s, p) => s + p.total, 0) / cheapestHours.length;
-
-  // Grupér sammenhængende timer i blokke (for visning)
-  const blocks = [];
-  let currentBlock = [cheapestHours[0]];
-  for (let i = 1; i < cheapestHours.length; i++) {
-    const diff = cheapestHours[i].time - cheapestHours[i-1].time;
-    if (diff <= 60*60*1000 + 1000) {
-      currentBlock.push(cheapestHours[i]);
-    } else {
-      blocks.push(currentBlock);
-      currentBlock = [cheapestHours[i]];
-    }
-  }
-  blocks.push(currentBlock);
-
-  const split = {
-    avg: splitAvg,
-    hours: cheapestHours,
-    blocks: blocks.map(b => ({
-      start: b[0].time,
-      end: new Date(b[b.length-1].time.getTime() + 60*60*1000),
-      hoursCount: b.length
-    })),
-    hoursCount: cheapestHours.length
-  };
-
-  // ----- Worst case for besparelses-beregning -----
-  let worstAvg = 0;
-  for (let i = 0; i <= allPrices.length - hoursNeeded; i++) {
-    const window = allPrices.slice(i, i + hoursNeeded);
-    const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
-    if (avg > worstAvg) worstAvg = avg;
-  }
-
-  if (contiguous) {
-    contiguous.totalCost = contiguous.avg * car.battery;
-    contiguous.savings = (worstAvg - contiguous.avg) * car.battery;
-  }
-  split.totalCost = split.avg * car.battery;
-  split.savings = (worstAvg - split.avg) * car.battery;
-  split.savingsVsContiguous = contiguous ? (contiguous.avg - split.avg) * car.battery : 0;
-
-  // Anbefal split hvis det sparer mere end 5 kr i forhold til sammenhængende
-  // ELLER hvis sammenhængende ikke kunne findes
-  const recommendSplit = !contiguous || split.savingsVsContiguous > 5;
-
-  return { contiguous, split, recommendSplit, hoursNeeded };
-}
-
-// ============================================================
-// VISNING / RENDERING
-// ============================================================
 function formatPrice(kr) { return kr.toFixed(2).replace('.', ',') + ' kr'; }
+function formatPriceShort(kr) { return kr.toFixed(2).replace('.', ','); }
 function formatTime(date) { return date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }); }
 function formatDayName(date) {
   const days = ['søn', 'man', 'tir', 'ons', 'tor', 'fre', 'lør'];
   const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
   return `${days[date.getDay()]} ${date.getDate()}. ${months[date.getMonth()]}`;
 }
-
-function categoryColor(cat) {
-  return cat === 'low' ? 'var(--green)' : cat === 'high' ? 'var(--red)' : 'var(--orange)';
+function formatDayNameLong(date) {
+  const days = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
+  return days[date.getDay()];
 }
 
-function renderChart(svgId, prices, isToday, selectedHours) {
+function categorize(price, allPrices) {
+  const sorted = [...allPrices].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.33)];
+  const q3 = sorted[Math.floor(sorted.length * 0.67)];
+  if (price <= q1) return 'low';
+  if (price >= q3) return 'high';
+  return 'mid';
+}
+
+function categoryFill(cat) {
+  return cat === 'low' ? '#4ec968' : cat === 'high' ? '#ef4444' : '#f5a623';
+}
+
+function getCurrentSoc() {
+  return STATE.selectedCar === 'kona' ? STATE.socKona : STATE.socEx60;
+}
+
+function setCurrentSoc(val) {
+  if (STATE.selectedCar === 'kona') {
+    STATE.socKona = val;
+    localStorage.setItem('socKona', val);
+  } else {
+    STATE.socEx60 = val;
+    localStorage.setItem('socEx60', val);
+  }
+}
+
+function carNeedsKwh() {
+  const car = CARS[STATE.selectedCar];
+  const soc = getCurrentSoc();
+  if (soc >= STATE.targetSoc) return 0;
+  return car.battery * (STATE.targetSoc - soc) / 100;
+}
+
+function carNeedsHours() {
+  return carNeedsKwh() / CARS[STATE.selectedCar].power;
+}
+
+// ============================================================
+// FETCHERS
+// ============================================================
+async function fetchSpot(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const url = `https://www.elprisenligenu.dk/api/v1/prices/${yyyy}/${mm}-${dd}_${REGION}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`spot ${res.status}`);
+  const data = await res.json();
+  return data.map(p => ({
+    time: new Date(p.time_start),
+    raw: p.DKK_per_kWh,
+    total: applyTariffs(p.DKK_per_kWh),
+    forecast: false,
+    confidence: 100,
+  }));
+}
+
+async function fetchCarnot() {
+  const res = await fetch(`${CARNOT_PROXY}/forecast?region=${REGION}`);
+  if (!res.ok) throw new Error(`carnot ${res.status}`);
+  const data = await res.json();
+  if (!data.predictions) return [];
+  const now = new Date();
+  return data.predictions.map(p => {
+    const d = new Date(p.dktime);
+    const dayDiff = Math.floor((d - now) / 86400000);
+    const ageHours = (now - new Date(p.addedtime)) / 3600000;
+    const confidence = Math.max(40, Math.round(82 - dayDiff * 5 - ageHours / 12));
+    const raw = p.prediction / 1000;
+    return {
+      time: d,
+      raw,
+      total: applyTariffs(raw),
+      forecast: true,
+      confidence,
+    };
+  });
+}
+
+async function fetchWind() {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${NAESTVED.lat}&longitude=${NAESTVED.lon}&hourly=wind_speed_10m,wind_speed_100m&forecast_days=7&timezone=Europe%2FCopenhagen`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`wind ${res.status}`);
+  return res.json();
+}
+
+async function loadAll() {
+  STATE.sources = {};
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  STATE.prices.today = [];
+  STATE.prices.tomorrow = [];
+  STATE.prices.forecast = [];
+
+  try {
+    STATE.prices.today = await fetchSpot(today);
+    STATE.sources.today = { name: 'spot-i-dag', status: 'ok' };
+  } catch (e) { STATE.sources.today = { name: 'spot-i-dag', status: 'fail' }; }
+
+  try {
+    STATE.prices.tomorrow = await fetchSpot(tomorrow);
+    STATE.sources.tomorrow = { name: 'spot-i-morgen', status: 'ok' };
+  } catch (e) { STATE.sources.tomorrow = { name: 'spot-i-morgen', status: 'fallback' }; }
+
+  try {
+    STATE.prices.forecast = await fetchCarnot();
+    STATE.sources.forecast = { name: 'carnot', status: 'ok' };
+  } catch (e) { STATE.sources.forecast = { name: 'carnot', status: 'fail' }; }
+
+  try {
+    STATE.wind = await fetchWind();
+    STATE.sources.wind = { name: 'open-meteo', status: 'ok' };
+  } catch (e) { STATE.sources.wind = { name: 'open-meteo', status: 'fail' }; }
+}
+
+// ============================================================
+// CHARGING PLAN — single car only
+// ============================================================
+function buildAllHours() {
+  const all = [...STATE.prices.today, ...STATE.prices.tomorrow];
+  // Add Carnot forecast for hours not already covered
+  const existingTimes = new Set(all.map(p => p.time.getTime()));
+  STATE.prices.forecast.forEach(p => {
+    if (!existingTimes.has(p.time.getTime())) all.push(p);
+  });
+  all.sort((a, b) => a.time - b.time);
+
+  // Categorize all visible prices together for consistent coloring
+  const totals = all.map(p => p.total);
+  all.forEach(p => p.category = categorize(p.total, totals));
+
+  // Attach wind data
+  if (STATE.wind && STATE.wind.hourly) {
+    const windTimes = STATE.wind.hourly.time;
+    const wind100 = STATE.wind.hourly.wind_speed_100m;
+    all.forEach(p => {
+      const idx = windTimes.findIndex(wt =>
+        Math.abs(new Date(wt).getTime() - p.time.getTime()) < 1800000
+      );
+      if (idx !== -1) p.wind100 = wind100[idx];
+    });
+  }
+
+  return all;
+}
+
+function planCharging() {
+  const allHours = buildAllHours();
+  const now = new Date();
+  const future = allHours.filter(p => p.time >= new Date(now.getTime() - 3600000));
+
+  const hoursNeeded = Math.max(1, Math.ceil(carNeedsHours()));
+  if (carNeedsKwh() <= 0) return null;
+  if (future.length < hoursNeeded) return null;
+
+  const car = CARS[STATE.selectedCar];
+
+  // Best contiguous window
+  let best = null;
+  for (let i = 0; i <= future.length - hoursNeeded; i++) {
+    const window = future.slice(i, i + hoursNeeded);
+    const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
+    if (!best || avg < best.avg) {
+      best = {
+        start: window[0].time,
+        end: new Date(window[window.length - 1].time.getTime() + 3600000),
+        hours: window,
+        avg,
+        avgWind: window.reduce((s, p) => s + (p.wind100 || 0), 0) / window.length,
+      };
+    }
+  }
+
+  // Best split (cheapest N hours overall)
+  const cheapest = [...future].sort((a, b) => a.total - b.total).slice(0, hoursNeeded);
+  cheapest.sort((a, b) => a.time - b.time);
+  const splitAvg = cheapest.reduce((s, p) => s + p.total, 0) / cheapest.length;
+
+  // Group cheapest into contiguous blocks
+  const blocks = [];
+  let block = [cheapest[0]];
+  for (let i = 1; i < cheapest.length; i++) {
+    const diff = cheapest[i].time - cheapest[i-1].time;
+    if (diff <= 3600000 + 1000) {
+      block.push(cheapest[i]);
+    } else {
+      blocks.push(block);
+      block = [cheapest[i]];
+    }
+  }
+  blocks.push(block);
+
+  const split = {
+    avg: splitAvg,
+    hours: cheapest,
+    blocks: blocks.map(b => ({
+      start: b[0].time,
+      end: new Date(b[b.length-1].time.getTime() + 3600000),
+      hoursCount: b.length,
+      avgWind: b.reduce((s, p) => s + (p.wind100 || 0), 0) / b.length,
+    })),
+  };
+
+  // Cost calculations
+  const totalKwh = car.battery * (STATE.targetSoc - getCurrentSoc()) / 100;
+  best.totalCost = best.avg * totalKwh;
+  split.totalCost = split.avg * totalKwh;
+
+  // Worst case for savings reference
+  let worstAvg = 0;
+  for (let i = 0; i <= future.length - hoursNeeded; i++) {
+    const window = future.slice(i, i + hoursNeeded);
+    const avg = window.reduce((s, p) => s + p.total, 0) / window.length;
+    if (avg > worstAvg) worstAvg = avg;
+  }
+  best.savings = (worstAvg - best.avg) * totalKwh;
+  split.savings = (worstAvg - split.avg) * totalKwh;
+  split.savingsVsContiguous = (best.avg - split.avg) * totalKwh;
+
+  const recommendSplit = split.savingsVsContiguous > 5;
+
+  return { best, split, recommendSplit, hoursNeeded, totalKwh };
+}
+
+// ============================================================
+// SVG CHART RENDERING
+// ============================================================
+function renderHourlyChart(svgId, prices, isToday, selectedHours) {
   const svg = document.getElementById(svgId);
   svg.innerHTML = '';
   if (!prices || prices.length === 0) {
@@ -495,11 +739,10 @@ function renderChart(svgId, prices, isToday, selectedHours) {
   const maxPrice = Math.max(...allTotals) * 1.05;
   const minPrice = 0;
 
-  // Grid lines (subtle)
-  const gridY = padTop + chartH;
+  // Baseline grid
   const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   gridLine.setAttribute('x1', padL); gridLine.setAttribute('x2', W - padR);
-  gridLine.setAttribute('y1', gridY); gridLine.setAttribute('y2', gridY);
+  gridLine.setAttribute('y1', padTop + chartH); gridLine.setAttribute('y2', padTop + chartH);
   gridLine.setAttribute('stroke', '#2e2e32'); gridLine.setAttribute('stroke-width', '0.5');
   svg.appendChild(gridLine);
 
@@ -515,18 +758,21 @@ function renderChart(svgId, prices, isToday, selectedHours) {
     const x = padL + i * barW + gap / 2;
     const barHeight = ((p.total - minPrice) / (maxPrice - minPrice)) * chartH;
     const y = padTop + chartH - barHeight;
-    const color = p.category === 'low' ? '#4ec968' : p.category === 'high' ? '#ef4444' : '#f5a623';
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('x', x);
     rect.setAttribute('y', y);
     rect.setAttribute('width', actualBarW);
     rect.setAttribute('height', barHeight);
-    rect.setAttribute('fill', color);
+    rect.setAttribute('fill', categoryFill(p.category));
     rect.setAttribute('rx', '1');
     rect.classList.add('bar');
+    if (p.forecast) {
+      rect.setAttribute('fill-opacity', '0.55');
+      rect.classList.add('forecast');
+    }
 
-    if (isToday && p.hour === currentHour) {
+    if (isToday && p.time.getHours() === currentHour && p.time.toDateString() === now.toDateString()) {
       rect.classList.add('now');
     }
 
@@ -536,7 +782,7 @@ function renderChart(svgId, prices, isToday, selectedHours) {
 
     svg.appendChild(rect);
 
-    // Marker valgte ladetimer med en lille blå understreg
+    // Charge marker (blue underline)
     if (selectedHours && selectedHours.some(h => h.time.getTime() === p.time.getTime())) {
       const marker = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       marker.setAttribute('x', x);
@@ -549,10 +795,10 @@ function renderChart(svgId, prices, isToday, selectedHours) {
     }
   });
 
-  // Hour labels - kl. 0, 6, 12, 18
+  // Hour labels
   const hours = [0, 6, 12, 18];
   hours.forEach(h => {
-    const idx = prices.findIndex(p => p.hour === h);
+    const idx = prices.findIndex(p => p.time.getHours() === h);
     if (idx === -1) return;
     const x = padL + idx * barW + barW / 2;
     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -565,10 +811,10 @@ function renderChart(svgId, prices, isToday, selectedHours) {
     svg.appendChild(txt);
   });
 
-  // Vertical guides at 6/12/18
+  // Vertical guides
   hours.forEach(h => {
     if (h === 0) return;
-    const idx = prices.findIndex(p => p.hour === h);
+    const idx = prices.findIndex(p => p.time.getHours() === h);
     if (idx === -1) return;
     const x = padL + idx * barW;
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -580,9 +826,163 @@ function renderChart(svgId, prices, isToday, selectedHours) {
   });
 }
 
-function showTooltip(event, price) {
+function renderDailyChart(svgId, dailyData, valueKey, unit) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if (!dailyData || dailyData.length === 0) return;
+
+  const W = 480, H = 170;
+  const padL = 12, padR = 12, padTop = 22, padBottom = 32;
+  const chartW = W - padL - padR;
+  const chartH = H - padTop - padBottom;
+
+  const values = dailyData.map(d => d[valueKey]);
+  const minV = Math.min(...values);
+  const maxV = Math.max(...values);
+
+  // Categorize per-day for traffic-light
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.33)];
+  const q3 = sorted[Math.floor(sorted.length * 0.67)];
+
+  const baseline = padTop + chartH;
+  const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  gridLine.setAttribute('x1', padL); gridLine.setAttribute('x2', W - padR);
+  gridLine.setAttribute('y1', baseline); gridLine.setAttribute('y2', baseline);
+  gridLine.setAttribute('stroke', '#2e2e32'); gridLine.setAttribute('stroke-width', '0.5');
+  svg.appendChild(gridLine);
+
+  const barCount = dailyData.length;
+  const barW = chartW / barCount;
+  const gap = barW * 0.18;
+  const actualBarW = barW - gap;
+  const now = new Date();
+
+  const cheapestIdx = values.indexOf(minV);
+
+  dailyData.forEach((d, i) => {
+    const x = padL + i * barW + gap / 2;
+    const v = d[valueKey];
+    const barHeight = ((v - 0) / (maxV * 1.1)) * chartH;
+    const y = baseline - barHeight;
+
+    let cat = 'mid';
+    if (v <= q1) cat = 'low';
+    else if (v >= q3) cat = 'high';
+    const fill = categoryFill(cat);
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', actualBarW);
+    rect.setAttribute('height', barHeight);
+    rect.setAttribute('fill', fill);
+    rect.setAttribute('rx', '2');
+    if (d.forecast) {
+      rect.setAttribute('fill-opacity', '0.55');
+      rect.setAttribute('stroke', fill);
+      rect.setAttribute('stroke-width', '1');
+      rect.setAttribute('stroke-dasharray', '3,2');
+    }
+    svg.appendChild(rect);
+
+    // Value label
+    const valTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    valTxt.setAttribute('x', x + actualBarW / 2);
+    valTxt.setAttribute('y', y - 4);
+    valTxt.setAttribute('text-anchor', 'middle');
+    valTxt.setAttribute('fill', '#9a9a9e');
+    valTxt.setAttribute('font-size', '10');
+    valTxt.textContent = v.toFixed(valueKey === 'avgWind' ? 1 : 2).replace('.', ',');
+    svg.appendChild(valTxt);
+
+    // Star marker for cheapest/lowest
+    if (i === cheapestIdx) {
+      const star = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      star.setAttribute('x', x + actualBarW / 2);
+      star.setAttribute('y', y - 14);
+      star.setAttribute('text-anchor', 'middle');
+      star.setAttribute('fill', '#4ec968');
+      star.setAttribute('font-size', '11');
+      star.textContent = '★';
+      svg.appendChild(star);
+    }
+
+    // Day label
+    const isToday = d.date.toDateString() === now.toDateString();
+    const dayLabel = isToday ? 'I dag' : ['søn','man','tir','ons','tor','fre','lør'][d.date.getDay()];
+    const labelTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelTxt.setAttribute('x', x + actualBarW / 2);
+    labelTxt.setAttribute('y', H - 14);
+    labelTxt.setAttribute('text-anchor', 'middle');
+    labelTxt.setAttribute('fill', isToday ? '#f0f0f0' : '#9a9a9e');
+    labelTxt.setAttribute('font-size', '11');
+    labelTxt.setAttribute('font-weight', isToday ? '600' : '400');
+    labelTxt.textContent = dayLabel;
+    svg.appendChild(labelTxt);
+
+    const dateTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    dateTxt.setAttribute('x', x + actualBarW / 2);
+    dateTxt.setAttribute('y', H - 3);
+    dateTxt.setAttribute('text-anchor', 'middle');
+    dateTxt.setAttribute('fill', '#5a6478');
+    dateTxt.setAttribute('font-size', '9');
+    dateTxt.textContent = d.date.getDate();
+    svg.appendChild(dateTxt);
+  });
+}
+
+function buildDailyData() {
+  const all = buildAllHours();
+  const byDay = {};
+  all.forEach(h => {
+    const key = h.time.toISOString().slice(0, 10);
+    if (!byDay[key]) byDay[key] = { date: new Date(h.time), prices: [], winds: [], forecast: false };
+    byDay[key].prices.push(h.total);
+    if (h.wind100 != null) byDay[key].winds.push(h.wind100);
+    if (h.forecast) byDay[key].forecast = true;
+  });
+
+  return Object.values(byDay)
+    .filter(d => d.prices.length > 0)
+    .slice(0, 7)
+    .map(d => ({
+      date: d.date,
+      avgPrice: d.prices.reduce((s, x) => s + x, 0) / d.prices.length,
+      avgWind: d.winds.length ? d.winds.reduce((s, x) => s + x, 0) / d.winds.length : 0,
+      forecast: d.forecast,
+    }));
+}
+
+function buildWindOnlyData() {
+  if (!STATE.wind || !STATE.wind.hourly) return [];
+  const byDay = {};
+  STATE.wind.hourly.time.forEach((t, i) => {
+    const date = new Date(t);
+    const key = date.toISOString().slice(0, 10);
+    if (!byDay[key]) byDay[key] = { date, winds: [] };
+    const v = STATE.wind.hourly.wind_speed_100m[i];
+    if (v != null) byDay[key].winds.push(v);
+  });
+  const now = new Date();
+  return Object.values(byDay)
+    .filter(d => d.winds.length > 0)
+    .slice(0, 7)
+    .map((d, i) => ({
+      date: d.date,
+      avgWind: d.winds.reduce((s, x) => s + x, 0) / d.winds.length,
+      forecast: i >= 2,
+    }));
+}
+
+// ============================================================
+// TOOLTIP
+// ============================================================
+function showTooltip(event, p) {
   const tip = document.getElementById('tooltip');
-  tip.innerHTML = `<strong>${String(price.hour).padStart(2,'0')}:00</strong> · <span>${formatPrice(price.total)}/kWh</span>`;
+  const hour = String(p.time.getHours()).padStart(2,'0');
+  const fc = p.forecast ? ` <span>· ${p.confidence}%</span>` : '';
+  tip.innerHTML = `<strong>${hour}:00</strong> · <span>${formatPrice(p.total)}/kWh</span>${fc}`;
   tip.style.display = 'block';
   const rect = event.target.getBoundingClientRect();
   tip.style.left = (rect.left + rect.width/2) + 'px';
@@ -591,303 +991,401 @@ function showTooltip(event, price) {
 }
 function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
 
+// ============================================================
+// MAIN RENDER
+// ============================================================
 function render() {
   const now = new Date();
   document.getElementById('now-time').textContent = formatTime(now);
   document.getElementById('now-date').textContent = formatDayName(now);
 
-  // Pris nu
-  const currentPrice = state.prices.today.find(p => {
-    return p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString();
-  });
+  // SoC display
+  document.getElementById('soc-car-name').textContent = CARS[STATE.selectedCar].name;
+  const socInput = document.getElementById('soc-input');
+  socInput.value = getCurrentSoc();
+  document.getElementById('soc-display').textContent = `${getCurrentSoc()}% → ${STATE.targetSoc}% (${carNeedsKwh().toFixed(0)} kWh / ${carNeedsHours().toFixed(1)} t)`;
+
+  // Pris nu card
+  const currentPrice = STATE.prices.today.find(p =>
+    p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
+  );
+  const cardNow = document.querySelector('.card');
   if (currentPrice) {
-    document.getElementById('price-now').textContent = formatPrice(currentPrice.total);
-    const catText = currentPrice.category === 'low' ? '🟢 Billig periode' :
-                    currentPrice.category === 'high' ? '🔴 Dyr periode' : '🟠 Mellem pris';
-    document.getElementById('price-now-cat').textContent = catText;
+    document.getElementById('price-now').textContent = formatPriceShort(currentPrice.total);
+    const todayTotals = STATE.prices.today.map(p => p.total);
+    const cat = categorize(currentPrice.total, todayTotals);
+    cardNow.classList.remove('green', 'red', 'orange');
+    cardNow.classList.add(cat === 'low' ? 'green' : cat === 'high' ? 'red' : 'orange');
+    document.getElementById('price-now-cat').textContent =
+      cat === 'low' ? 'Billigt — god ladetid' : cat === 'high' ? 'Dyrt — undgå' : 'Middel';
   }
 
-  // Billigste fremad
-  const allFuture = [
-    ...state.prices.today.filter(p => p.time > now),
-    ...state.prices.tomorrow
-  ];
-  if (allFuture.length > 0) {
-    const cheapest = allFuture.reduce((min, p) => p.total < min.total ? p : min);
-    document.getElementById('price-low').textContent = formatPrice(cheapest.total);
-    const dayLabel = cheapest.time.toDateString() === now.toDateString() ? 'i dag' : 'i morgen';
-    document.getElementById('price-low-when').textContent = `${dayLabel} kl. ${String(cheapest.hour).padStart(2,'0')}:00`;
+  // Billigst frem card — find cheapest hour ahead
+  const allHours = buildAllHours();
+  const future = allHours.filter(p => p.time >= now);
+  if (future.length > 0) {
+    const cheapest = [...future].sort((a, b) => a.total - b.total)[0];
+    document.getElementById('price-low').textContent = formatPriceShort(cheapest.total);
+    const isToday = cheapest.time.toDateString() === now.toDateString();
+    const dayLabel = isToday ? 'i dag' : 'i morgen';
+    const moreSpecific = cheapest.time.toDateString() === now.toDateString()
+      ? `i dag kl. ${formatTime(cheapest.time)}`
+      : cheapest.time.toDateString() === new Date(now.getTime() + 86400000).toDateString()
+        ? `i morgen kl. ${formatTime(cheapest.time)}`
+        : `${formatDayName(cheapest.time)} kl. ${formatTime(cheapest.time)}`;
+    document.getElementById('price-low-when').textContent = moreSpecific;
   }
 
-  // Charts
-  const today = new Date();
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  document.getElementById('day1-label').textContent = formatDayName(today);
-  document.getElementById('day2-label').textContent = formatDayName(tomorrow);
-
-  if (state.prices.today.length) {
-    const avg = state.prices.today.reduce((s,p)=>s+p.total,0) / state.prices.today.length;
-    document.getElementById('day1-stats').textContent = `snit ${formatPrice(avg)}/kWh`;
-  }
-  if (state.prices.tomorrow.length) {
-    const avg = state.prices.tomorrow.reduce((s,p)=>s+p.total,0) / state.prices.tomorrow.length;
-    document.getElementById('day2-stats').textContent = `snit ${formatPrice(avg)}/kWh`;
-  } else {
-    document.getElementById('day2-stats').textContent = 'kommer kl. 13';
-  }
-
-  // Find valgte ladetimer for at markere dem i søjlediagrammet
-  const result = findChargingWindows(state.selectedCar);
-  let selectedHours = [];
-  if (result) {
-    selectedHours = result.recommendSplit
-      ? result.split.hours
-      : (result.contiguous ? result.contiguous.hours : []);
-  }
-
-  renderChart('chart-today', state.prices.today, true, selectedHours);
-  renderChart('chart-tomorrow', state.prices.tomorrow, false, selectedHours);
-
+  // Recommendation
   renderRecommendation();
+
+  // Today / Tomorrow charts
+  const todayData = STATE.prices.today;
+  const tomorrowData = STATE.prices.tomorrow;
+  document.getElementById('day1-label').textContent = todayData[0] ? formatDayName(todayData[0].time) : '–';
+  document.getElementById('day2-label').textContent = tomorrowData[0] ? formatDayName(tomorrowData[0].time) : 'Endnu ikke offentliggjort';
+
+  if (todayData.length > 0) {
+    const totals = todayData.map(p => p.total);
+    todayData.forEach(p => p.category = categorize(p.total, totals));
+    document.getElementById('day1-stats').textContent =
+      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr/kWh`;
+  }
+
+  if (tomorrowData.length > 0) {
+    const totals = tomorrowData.map(p => p.total);
+    tomorrowData.forEach(p => p.category = categorize(p.total, totals));
+    document.getElementById('day2-stats').textContent =
+      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr/kWh`;
+  }
+
+  const plan = planCharging();
+  const selectedHours = plan ? (plan.recommendSplit ? plan.split.hours : plan.best.hours) : [];
+
+  renderHourlyChart('chart-today', todayData, true, selectedHours);
+  renderHourlyChart('chart-tomorrow', tomorrowData, false, selectedHours);
+
+  // Weekly daily charts
+  const dailyData = buildDailyData();
+  renderDailyChart('chart-week', dailyData, 'avgPrice', 'kr/kWh');
+
+  const windData = buildWindOnlyData();
+  renderDailyChart('chart-wind', windData, 'avgWind', 'm/s');
+
+  // Sources
+  const sourcesEl = document.getElementById('sources');
+  sourcesEl.innerHTML = '';
+  Object.values(STATE.sources).forEach(s => {
+    const dot = s.status === 'ok' ? 'ok' : s.status === 'fallback' ? 'fallback' : 'fail';
+    sourcesEl.innerHTML += `<div class="source"><span class="source-dot ${dot}"></span>${s.name}</div>`;
+  });
+
+  document.getElementById('last-update').textContent = formatTime(now);
 }
 
 function renderRecommendation() {
-  const car = CONFIG.cars[state.selectedCar];
-  const result = findChargingWindows(state.selectedCar);
   const el = document.getElementById('recommendation');
+  const plan = planCharging();
+  const car = CARS[STATE.selectedCar];
 
-  if (!result) {
-    el.innerHTML = `<div class="head">Bedste ladevindue</div><div class="when">Ikke nok data</div><div class="detail">Vent på morgendagens priser kl. 13.</div>`;
+  if (!plan) {
+    el.innerHTML = `
+      <div class="head">⚡ Lade-plan · ${car.fullName}</div>
+      <div style="color:var(--text-dim);font-size:13px;text-align:center;padding:16px 0">${car.fullName} er allerede over ${STATE.targetSoc}% — ingen ladning nødvendig.</div>
+    `;
     return;
   }
 
-  const { contiguous, split, recommendSplit, hoursNeeded } = result;
-  const now = new Date();
-
-  // Hjælpefunktion til at formatere en blok
-  const formatBlock = (block) => {
-    const sameDay = block.start.toDateString() === now.toDateString();
-    const dayPrefix = sameDay ? 'I dag' : formatDayName(block.start);
-    return `${dayPrefix} ${formatTime(block.start)}–${formatTime(block.end)}`;
+  const formatBlock = (b) => {
+    const dayName = formatDayNameLong(b.start);
+    const isWeekend = b.start.getDay() === 0 || b.start.getDay() === 6;
+    return {
+      when: `${dayName} kl. ${formatTime(b.start)}–${formatTime(b.end)}`,
+      isWeekend,
+      hoursCount: b.hoursCount,
+      avgWind: b.avgWind,
+    };
   };
 
-  // Bygger HTML for begge anbefalinger
-  let contiguousHtml = '';
-  if (contiguous) {
-    const sameDay = contiguous.start.toDateString() === now.toDateString();
-    const dayPrefix = sameDay ? 'I dag' : formatDayName(contiguous.start);
-    contiguousHtml = `
-      <div class="option ${recommendSplit ? '' : 'best'}">
+  const bestBlock = formatBlock({ start: plan.best.start, end: plan.best.end, hoursCount: plan.hoursNeeded, avgWind: plan.best.avgWind });
+  const bestIsWeekend = bestBlock.isWeekend;
+
+  let optionsHtml = '';
+
+  // Option 1: Best contiguous
+  const bestTags = [];
+  bestTags.push(`<span class="badge ${bestIsWeekend ? 'weekend' : 'weekday'}">${bestIsWeekend ? 'Weekend ✓' : 'Hverdag — kræver hjemme'}</span>`);
+  if (plan.best.avgWind > 10) bestTags.push(`<span class="badge wind">💨 ${plan.best.avgWind.toFixed(1)} m/s</span>`);
+
+  optionsHtml += `
+    <div class="option ${plan.recommendSplit ? '' : 'best'}">
+      <div class="opt-head">
+        <span class="opt-title">Sammenhængende</span>
+        ${plan.recommendSplit ? '' : '<span class="badge">Bedst</span>'}
+      </div>
+      <div class="opt-when">${bestBlock.when}</div>
+      <div class="opt-detail">
+        <strong>${plan.hoursNeeded} timer</strong> · ${formatPriceShort(plan.best.avg)} kr/kWh i snit · <strong>${formatPriceShort(plan.best.totalCost)} kr</strong> total
+      </div>
+      <div class="opt-tags">${bestTags.join('')}</div>
+    </div>
+  `;
+
+  // Option 2: Split (only if it saves >5kr)
+  if (plan.recommendSplit) {
+    const splitBlocksHtml = plan.split.blocks.map(b => {
+      const fb = formatBlock(b);
+      const tags = [`<span class="badge ${fb.isWeekend ? 'weekend' : 'weekday'}">${fb.isWeekend ? 'Weekend ✓' : 'Hverdag'}</span>`];
+      if (fb.avgWind > 10) tags.push(`<span class="badge wind">💨 ${fb.avgWind.toFixed(1)} m/s</span>`);
+      return `
+        <div style="padding:6px 0;border-top:1px solid var(--border);">
+          <div style="font-size:13px;color:var(--text);font-weight:500">${fb.when}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${fb.hoursCount} timer</div>
+          <div class="opt-tags">${tags.join('')}</div>
+        </div>
+      `;
+    }).join('');
+
+    optionsHtml += `
+      <div class="option best">
         <div class="opt-head">
-          <span class="opt-title">🔌 Sammenhængende</span>
-          ${!recommendSplit ? '<span class="badge">Anbefalet</span>' : ''}
+          <span class="opt-title">Delt ladning (anbefalet)</span>
+          <span class="badge">Sparer ${plan.split.savingsVsContiguous.toFixed(0)} kr</span>
         </div>
-        <div class="opt-when">${dayPrefix} · ${formatTime(contiguous.start)}–${formatTime(contiguous.end)} (${contiguous.hoursCount}t)</div>
-        <div class="opt-detail">
-          Snit ${formatPrice(contiguous.avg)}/kWh · ca. <strong>${contiguous.totalCost.toFixed(0)} kr</strong> for fuld opladning
+        <div class="opt-detail" style="margin-bottom:6px">
+          <strong>${plan.hoursNeeded} timer</strong> fordelt over flere blokke · ${formatPriceShort(plan.split.avg)} kr/kWh i snit · <strong>${formatPriceShort(plan.split.totalCost)} kr</strong> total
         </div>
+        ${splitBlocksHtml}
       </div>
     `;
   }
 
-  const splitBlocksText = split.blocks.map(formatBlock).join(' + ');
-  const splitHtml = `
-    <div class="option ${recommendSplit ? 'best' : ''}">
-      <div class="opt-head">
-        <span class="opt-title">⚡ Opdelt (billigste timer)</span>
-        ${recommendSplit ? '<span class="badge">Anbefalet</span>' : ''}
-      </div>
-      <div class="opt-when">${splitBlocksText}</div>
-      <div class="opt-detail">
-        Snit ${formatPrice(split.avg)}/kWh · ca. <strong>${split.totalCost.toFixed(0)} kr</strong> for fuld opladning
-        ${split.savingsVsContiguous > 0 ? `<br><span style="color:var(--green)">Sparer ${split.savingsVsContiguous.toFixed(0)} kr vs. sammenhængende</span>` : ''}
-      </div>
-    </div>
-  `;
-
   el.innerHTML = `
-    <div class="head">⚡ Ladning af ${car.label} · ${hoursNeeded}t total</div>
-    ${contiguousHtml}
-    ${splitHtml}
+    <div class="head">⚡ Lade-plan · ${car.fullName} <span style="margin-left:auto;color:var(--text-dim);font-weight:400">${plan.totalKwh.toFixed(0)} kWh</span></div>
+    ${optionsHtml}
   `;
 }
 
 // ============================================================
-// TALE-OPLÆSNING
+// TEXT-TO-SPEECH
 // ============================================================
-let speechActive = false;
-function speak() {
-  if (!('speechSynthesis' in window)) {
-    alert('Din browser understøtter ikke oplæsning');
-    return;
-  }
-  const btn = document.getElementById('speak-btn');
-  if (speechActive) {
-    speechSynthesis.cancel();
-    speechActive = false;
-    btn.classList.remove('speaking');
-    btn.innerHTML = '<span class="icon">🔊</span> Læs op';
-    return;
-  }
+let isSpeaking = false;
+let availableVoices = [];
 
-  const car = CONFIG.cars[state.selectedCar];
-  const result = findChargingWindows(state.selectedCar);
+function loadVoices() {
+  availableVoices = window.speechSynthesis.getVoices();
+  const select = document.getElementById('voiceSelect');
+  if (!select) return;
+
+  const sorted = [...availableVoices].sort((a, b) => {
+    const aDa = a.lang.startsWith('da') ? 0 : a.lang.startsWith('en') ? 1 : 2;
+    const bDa = b.lang.startsWith('da') ? 0 : b.lang.startsWith('en') ? 1 : 2;
+    if (aDa !== bDa) return aDa - bDa;
+    return a.name.localeCompare(b.name);
+  });
+
+  select.innerHTML = '<option value="">Auto (bedst dansk)</option>' +
+    sorted.map(v => {
+      const flag = v.lang.startsWith('da') ? '🇩🇰 ' : v.lang.startsWith('en') ? '🇬🇧 ' : '';
+      return `<option value="${v.voiceURI}" ${v.voiceURI === STATE.voiceURI ? 'selected' : ''}>${flag}${v.name} (${v.lang})</option>`;
+    }).join('');
+}
+
+function pickVoice() {
+  if (STATE.voiceURI) {
+    const chosen = availableVoices.find(v => v.voiceURI === STATE.voiceURI);
+    if (chosen) return chosen;
+  }
+  const danish = availableVoices.filter(v => v.lang.startsWith('da'));
+  const preferred = danish.find(v => /natural|neural|enhanced|premium|magnus|sara|christel|naja/i.test(v.name));
+  return preferred || danish[0] || availableVoices.find(v => v.lang.startsWith('en'));
+}
+
+function buildSpeechText() {
+  const car = CARS[STATE.selectedCar];
+  const soc = getCurrentSoc();
+  const plan = planCharging();
+  const parts = [];
   const now = new Date();
-  const currentPrice = state.prices.today.find(p =>
+
+  const currentPrice = STATE.prices.today.find(p =>
     p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
   );
-
-  let text = `Klokken er ${now.getHours()} ${String(now.getMinutes()).padStart(2,'0')}. `;
   if (currentPrice) {
-    const catText = currentPrice.category === 'low' ? 'en billig periode' :
-                    currentPrice.category === 'high' ? 'en dyr periode' : 'en mellem pris';
-    text += `Elprisen lige nu er ${currentPrice.total.toFixed(2).replace('.', ' komma ')} kroner per kilowatt-time. Det er ${catText}. `;
+    parts.push(`Aktuel elpris i Næstved: ${formatPriceShort(currentPrice.total)} kroner per kilowatt-time.`);
   }
 
-  if (result) {
-    const { contiguous, split, recommendSplit, hoursNeeded } = result;
-    text += `${car.name} skal bruge ${hoursNeeded} timer i alt. `;
+  if (carNeedsKwh() <= 0) {
+    parts.push(`${car.fullName} er allerede over ${STATE.targetSoc} procent og behøver ikke lades.`);
+  } else {
+    parts.push(`${car.fullName} står på ${soc} procent og skal lade ${carNeedsKwh().toFixed(0)} kilowatt-timer for at nå ${STATE.targetSoc} procent.`);
+  }
 
-    if (recommendSplit) {
-      text += `Jeg anbefaler at lade i flere omgange for at fange de billigste timer. `;
-      split.blocks.forEach((b, i) => {
-        const sameDay = b.start.toDateString() === now.toDateString();
-        const dayPrefix = sameDay ? 'i dag' : 'i morgen';
-        const connector = i === 0 ? '' : i === split.blocks.length - 1 ? ' og derefter ' : ', dernæst ';
-        text += `${connector}${dayPrefix} fra klokken ${b.start.getHours()} til klokken ${b.end.getHours()}`;
+  if (plan) {
+    const best = plan.best;
+    const bestDay = formatDayNameLong(best.start);
+    const bestIsWeekend = best.start.getDay() === 0 || best.start.getDay() === 6;
+    const dayType = bestIsWeekend ? '' : ', men kræver hjemmearbejdsdag';
+
+    if (plan.recommendSplit) {
+      parts.push(`Den bedste plan er at lade i flere blokke i ugens billigste timer.`);
+      plan.split.blocks.slice(0, 3).forEach(b => {
+        const dayName = formatDayNameLong(b.start);
+        const isWeekend = b.start.getDay() === 0 || b.start.getDay() === 6;
+        const wknd = isWeekend ? '' : ', kræver hjemmearbejdsdag';
+        parts.push(`${dayName} fra klokken ${formatTime(b.start)} til ${formatTime(b.end)}${wknd}, ${b.hoursCount} timer.`);
       });
-      text += `. Gennemsnitspris ${split.avg.toFixed(2).replace('.', ' komma ')} kroner. `;
-      text += `Fuld opladning koster cirka ${Math.round(split.totalCost)} kroner, `;
-      if (split.savingsVsContiguous > 0) {
-        text += `hvilket er ${Math.round(split.savingsVsContiguous)} kroner billigere end at lade sammenhængende. `;
-      }
-    } else if (contiguous) {
-      const sameDay = contiguous.start.toDateString() === now.toDateString();
-      const dayPrefix = sameDay ? 'i dag' : 'i morgen';
-      text += `Bedste ladevindue er ${dayPrefix} fra klokken ${contiguous.start.getHours()} til klokken ${contiguous.end.getHours()}. `;
-      text += `Gennemsnitspris ${contiguous.avg.toFixed(2).replace('.', ' komma ')} kroner per kilowatt-time. `;
-      text += `Fuld opladning koster cirka ${Math.round(contiguous.totalCost)} kroner.`;
+      parts.push(`Samlet pris cirka ${plan.split.totalCost.toFixed(0)} kroner. Du sparer ${plan.split.savingsVsContiguous.toFixed(0)} kroner ved at dele ladningen op.`);
+    } else {
+      parts.push(`Bedste tidspunkt at lade er ${bestDay} fra klokken ${formatTime(best.start)} til ${formatTime(best.end)}${dayType}.`);
+      parts.push(`Det er ${plan.hoursNeeded} timer til ${formatPriceShort(best.avg)} kroner per kilowatt-time i snit, samlet ${best.totalCost.toFixed(0)} kroner.`);
     }
   }
 
+  if (STATE.wind && STATE.wind.hourly) {
+    const winds = STATE.wind.hourly.wind_speed_100m.slice(0, 168).filter(x => x != null);
+    if (winds.length > 0) {
+      const avgWind = winds.reduce((s, x) => s + x, 0) / winds.length;
+      let desc;
+      if (avgWind > 11) desc = 'stærk vind';
+      else if (avgWind > 7) desc = 'jævn vind';
+      else desc = 'svag vind';
+      parts.push(`Vindprognose for ugen: ${desc} med gennemsnit ${avgWind.toFixed(1)} meter per sekund.`);
+    }
+  }
+
+  return parts.join(' ');
+}
+
+function speak(textOverride) {
+  if (!('speechSynthesis' in window)) {
+    alert('Tekst-til-tale er ikke tilgængelig i denne browser.');
+    return;
+  }
+
+  const btn = document.getElementById('speak-btn');
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    btn.classList.remove('speaking');
+    return;
+  }
+
+  const text = textOverride || buildSpeechText();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'da-DK';
-  utterance.rate = 0.95;
+  utterance.rate = STATE.ttsRate;
   utterance.pitch = 1.0;
 
-  // Find dansk stemme hvis muligt
-  const voices = speechSynthesis.getVoices();
-  const danishVoice = voices.find(v => v.lang.startsWith('da'));
-  if (danishVoice) utterance.voice = danishVoice;
+  const voice = pickVoice();
+  if (voice) utterance.voice = voice;
 
-  utterance.onstart = () => {
-    speechActive = true;
-    btn.classList.add('speaking');
-    btn.innerHTML = '<span class="icon">⏸</span> Stop';
-  };
-  utterance.onend = () => {
-    speechActive = false;
-    btn.classList.remove('speaking');
-    btn.innerHTML = '<span class="icon">🔊</span> Læs op';
-  };
-  speechSynthesis.speak(utterance);
+  utterance.onstart = () => { isSpeaking = true; btn.classList.add('speaking'); };
+  utterance.onend = () => { isSpeaking = false; btn.classList.remove('speaking'); };
+  utterance.onerror = () => { isSpeaking = false; btn.classList.remove('speaking'); };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 // ============================================================
-// EVENT LISTENERS
+// EVENTS
 // ============================================================
+document.getElementById('speak-btn').addEventListener('click', () => speak());
+
+document.getElementById('refresh-btn').addEventListener('click', async () => {
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  await loadAll();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  render();
+});
+
+document.getElementById('settings-toggle').addEventListener('click', () => {
+  document.getElementById('settings-panel').classList.toggle('open');
+});
+
 document.querySelectorAll('.car-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.car-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    state.selectedCar = btn.dataset.car;
-    if (state.loaded) renderRecommendation();
+    STATE.selectedCar = btn.dataset.car;
+    localStorage.setItem('selectedCar', btn.dataset.car);
+    render();
   });
 });
-document.getElementById('speak-btn').addEventListener('click', speak);
-document.getElementById('refresh-btn').addEventListener('click', loadPrices);
 
-// ============================================================
-// SMART AUTO-OPDATERING
-// Sikrer at appen ALTID viser de nyeste priser:
-//  1. Initial load når app starter
-//  2. Hvert minut: opdater "klokken" + tjek om vi krydsede en milepæl
-//  3. Ved midnat: nye priser for ny dag (det der var i morgen er nu i dag)
-//  4. Ved kl. 13:00: morgendagens nye priser frigives fra Nord Pool
-//  5. Når appen vækkes fra baggrunden (du tager telefon op i bilen)
-//  6. Backup: refresh hvert 15. minut uanset hvad
-// ============================================================
-let lastFetchedDate = '';
-let lastFetchedHour = -1;
-
-function smartTick() {
-  const now = new Date();
-  document.getElementById('now-time').textContent = formatTime(now);
-
-  const todayStr = now.toDateString();
-  const currentHour = now.getHours();
-
-  // Trigger 1: Dagen er skiftet siden sidste hentning
-  if (lastFetchedDate && lastFetchedDate !== todayStr) {
-    console.log('[Auto-opdater] Ny dag - henter nye priser');
-    loadPrices();
-    return;
-  }
-
-  // Trigger 2: Vi har lige passeret kl. 13 og ikke har morgendagens priser endnu
-  if (currentHour === 13 && lastFetchedHour < 13 && state.prices.tomorrow.length === 0) {
-    console.log('[Auto-opdater] Kl. 13 - prøver at hente morgendagens priser');
-    loadPrices();
-    return;
-  }
-
-  // Trigger 3: Time er skiftet (fanger pris-kategorisering "nu")
-  if (currentHour !== lastFetchedHour && state.loaded) {
+document.getElementById('soc-input').addEventListener('change', (e) => {
+  const val = parseInt(e.target.value);
+  if (!isNaN(val) && val >= 0 && val <= 100) {
+    setCurrentSoc(val);
     render();
-    lastFetchedHour = currentHour;
   }
-}
+});
 
-// Initial load
-loadPrices();
-
-// Tjek hvert minut
-setInterval(smartTick, 60 * 1000);
-
-// Backup-refresh hvert 15. minut (uanset)
-setInterval(loadPrices, 15 * 60 * 1000);
-
-// Trigger 4: Når appen vækkes fra baggrunden eller du skifter tilbage til den
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.loaded) {
-    const now = new Date();
-    const todayStr = now.toDateString();
-    // Hvis dagen er skiftet, eller vi mangler morgendagens priser efter kl. 13
-    const needsRefresh =
-      lastFetchedDate !== todayStr ||
-      (now.getHours() >= 13 && state.prices.tomorrow.length === 0);
-    if (needsRefresh) {
-      console.log('[Auto-opdater] App vækket - henter nye priser');
-      loadPrices();
+['targetSoc', 'surcharge', 'vat', 'ttsRate'].forEach(id => {
+  document.getElementById(id).addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    STATE[id] = val;
+    localStorage.setItem(id, val);
+    // Recalculate prices with new tariff
+    if (id === 'surcharge' || id === 'vat') {
+      [...STATE.prices.today, ...STATE.prices.tomorrow, ...STATE.prices.forecast].forEach(p => {
+        p.total = applyTariffs(p.raw);
+      });
     }
-  }
+    render();
+  });
 });
 
-// Trigger 5: Når enheden får internetforbindelse igen
-window.addEventListener('online', () => {
-  console.log('[Auto-opdater] Online igen - henter priser');
-  loadPrices();
+document.getElementById('voiceSelect').addEventListener('change', (e) => {
+  STATE.voiceURI = e.target.value;
+  localStorage.setItem('voiceURI', e.target.value);
 });
 
-// Voices loader async i nogle browsere
+document.getElementById('ttsTestBtn').addEventListener('click', () => {
+  speak('Hej Benny. Dette er en test af stemmen. Hvis udtalen er klar, kan du bruge denne stemme til oplæsning af lade-planen.');
+});
+
 if ('speechSynthesis' in window) {
-  speechSynthesis.onvoiceschanged = () => {};
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-// Service worker for offline-evne (PWA)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+// Init settings inputs
+document.getElementById('targetSoc').value = STATE.targetSoc;
+document.getElementById('surcharge').value = STATE.surcharge;
+document.getElementById('vat').value = STATE.vat;
+document.getElementById('ttsRate').value = STATE.ttsRate;
+
+// Set active car button
+document.querySelectorAll('.car-toggle button').forEach(b => {
+  b.classList.toggle('active', b.dataset.car === STATE.selectedCar);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+(async () => {
+  try {
+    await loadAll();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    STATE.loaded = true;
+    render();
+
+    // Auto-refresh time every minute
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('now-time').textContent = formatTime(now);
+    }, 60000);
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = `Fejl ved indlæsning: ${e.message}`;
+    console.error(e);
+  }
+})();
 </script>
 </body>
 </html>

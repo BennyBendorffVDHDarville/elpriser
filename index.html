@@ -104,7 +104,6 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
   margin-bottom: 12px;
 }
 .recommend .head { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-.recommend .head .badge-best { background: var(--green); color: #0a3d12; padding: 2px 7px; border-radius: 5px; font-size: 9px; }
 
 .option {
   background: var(--surface-2);
@@ -171,6 +170,19 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 }
 .soc-input-wrap .pct { font-size: 13px; color: var(--text-dim); }
 
+.tariff-info {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.tariff-info strong { color: var(--text); }
+.tariff-info .row { display: flex; justify-content: space-between; }
+
 .settings-toggle {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -196,15 +208,27 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
   display: none;
 }
 .settings-panel.open { display: block; }
+.settings-section {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.settings-section:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.settings-section-title {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
 .settings-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 6px 0;
   gap: 10px;
 }
-.settings-row:last-child { border-bottom: none; }
 .settings-row .lbl { font-size: 12px; color: var(--text-dim); flex: 1; }
 .settings-row input[type="number"] {
   background: var(--surface-2);
@@ -254,7 +278,6 @@ button.speaking { background: var(--blue); color: white; border-color: var(--blu
 .bar { transition: opacity 0.2s; cursor: pointer; }
 .bar:hover { opacity: 0.85; }
 .bar.now { stroke: var(--blue); stroke-width: 1.5; stroke-dasharray: 3,2; }
-.bar.forecast { stroke: rgba(255,255,255,0.3); stroke-width: 0.5; stroke-dasharray: 2,2; }
 
 .tooltip {
   position: absolute; background: var(--surface-2); border: 1px solid var(--border);
@@ -291,7 +314,7 @@ footer { text-align: center; padding: 20px 0 4px; font-size: 10px; color: var(--
   <header>
     <div class="title">
       <h1>⚡ Lade Planlægger</h1>
-      <p>DK2 · Næstved · Spotpris + Carnot</p>
+      <p>DK2 · Næstved · Cerius · NRGi Time</p>
     </div>
     <div class="location">
       <strong id="now-time">--:--</strong>
@@ -315,6 +338,8 @@ footer { text-align: center; padding: 20px 0 4px; font-size: 10px; color: var(--
         <div class="sub" id="price-low-when">–</div>
       </div>
     </div>
+
+    <div class="tariff-info" id="tariff-info"></div>
 
     <div class="car-toggle">
       <button data-car="kona" class="active kona">Kona 60 kWh</button>
@@ -343,33 +368,84 @@ footer { text-align: center; padding: 20px 0 4px; font-size: 10px; color: var(--
     </div>
 
     <button class="settings-toggle" id="settings-toggle">
-      ⚙ Indstillinger (afgifter, stemme)
+      ⚙ Indstillinger
     </button>
 
     <div class="settings-panel" id="settings-panel">
-      <div class="settings-row">
-        <span class="lbl">Mål for opladning (%)</span>
-        <input type="number" id="targetSoc" value="80" step="5" min="50" max="100">
+      <div class="settings-section">
+        <div class="settings-section-title">Bil & opladning</div>
+        <div class="settings-row">
+          <span class="lbl">Mål for opladning (%)</span>
+          <input type="number" id="targetSoc" value="80" step="5" min="50" max="100">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Ladeeffekt (kW)</span>
+          <input type="number" id="chargerKw" value="11" step="0.1" min="3" max="22">
+        </div>
       </div>
-      <div class="settings-row">
-        <span class="lbl">Fast tillæg (kr/kWh)</span>
-        <input type="number" id="surcharge" value="1.20" step="0.01" min="0">
+
+      <div class="settings-section">
+        <div class="settings-section-title">Elselskab — NRGi Time</div>
+        <div class="settings-row">
+          <span class="lbl">Spottillæg (øre/kWh, ekskl. moms)</span>
+          <input type="number" id="nrgiTillaeg" value="9" step="0.1" min="0">
+        </div>
       </div>
-      <div class="settings-row">
-        <span class="lbl">Moms (%)</span>
-        <input type="number" id="vat" value="25" step="1" min="0">
+
+      <div class="settings-section">
+        <div class="settings-section-title">Statslige afgifter</div>
+        <div class="settings-row">
+          <span class="lbl">Energinet (øre/kWh, ekskl.)</span>
+          <input type="number" id="energinet" value="7.0" step="0.1" min="0">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Elafgift (øre/kWh, ekskl.)</span>
+          <input type="number" id="elafgift" value="0.8" step="0.1" min="0">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Moms (%)</span>
+          <input type="number" id="vat" value="25" step="1" min="0">
+        </div>
       </div>
-      <div class="settings-row">
-        <span class="lbl">Stemme</span>
-        <select id="voiceSelect"></select>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Cerius nettariffer (øre/kWh, ekskl.)</div>
+        <div class="settings-row">
+          <span class="lbl">Vinter lavlast (00-06)</span>
+          <input type="number" id="cw_lav" value="13" step="0.1">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Vinter højlast (06-17, 21-24)</span>
+          <input type="number" id="cw_hoj" value="40" step="0.1">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Vinter spidslast (17-21)</span>
+          <input type="number" id="cw_spids" value="120" step="0.1">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Sommer lavlast (00-06)</span>
+          <input type="number" id="cs_lav" value="13" step="0.1">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Sommer højlast (06-24)</span>
+          <input type="number" id="cs_hoj" value="20" step="0.1">
+        </div>
       </div>
-      <div class="settings-row">
-        <span class="lbl">Tale-hastighed</span>
-        <input type="number" id="ttsRate" value="0.85" step="0.05" min="0.5" max="1.5">
-      </div>
-      <div class="settings-row">
-        <span class="lbl">Test stemme</span>
-        <button class="test-btn" id="ttsTestBtn">▶ Afspil</button>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Stemme</div>
+        <div class="settings-row">
+          <span class="lbl">Stemme</span>
+          <select id="voiceSelect"></select>
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Tale-hastighed</span>
+          <input type="number" id="ttsRate" value="0.85" step="0.05" min="0.5" max="1.5">
+        </div>
+        <div class="settings-row">
+          <span class="lbl">Test stemme</span>
+          <button class="test-btn" id="ttsTestBtn">▶ Afspil</button>
+        </div>
       </div>
     </div>
 
@@ -433,8 +509,8 @@ footer { text-align: center; padding: 20px 0 4px; font-size: 10px; color: var(--
   <div id="tooltip" class="tooltip"></div>
 
   <footer>
-    Spotpris fra elprisenligenu.dk · Carnot prognose dag 3-7 · Vind fra Open-Meteo<br>
-    Priser inkl. tillæg + moms · Sidst opdateret <span id="last-update">–</span>
+    Spotpris fra elprisenligenu.dk · Cerius DK2 + Energinet + NRGi Time<br>
+    Inkl. alle afgifter + 25% moms · Sidst opdateret <span id="last-update">–</span>
   </footer>
 </div>
 
@@ -447,8 +523,8 @@ const REGION = 'DK2';
 const NAESTVED = { lat: 55.23, lon: 11.76 };
 
 const CARS = {
-  kona: { name: 'Kona', fullName: 'Hyundai Kona', battery: 60, label: 'Kona 60 kWh', power: 11 },
-  ex60: { name: 'EX60', fullName: 'Volvo EX60', battery: 117, label: 'EX60 117 kWh', power: 11 }
+  kona: { name: 'Kona', fullName: 'Hyundai Kona', battery: 60, label: 'Kona 60 kWh' },
+  ex60: { name: 'EX60', fullName: 'Volvo EX60', battery: 117, label: 'EX60 117 kWh' }
 };
 
 const STATE = {
@@ -458,22 +534,89 @@ const STATE = {
   socKona: parseInt(localStorage.getItem('socKona')) || 10,
   socEx60: parseInt(localStorage.getItem('socEx60')) || 25,
   targetSoc: parseInt(localStorage.getItem('targetSoc')) || 80,
-  surcharge: parseFloat(localStorage.getItem('surcharge')) || 1.20,
+  chargerKw: parseFloat(localStorage.getItem('chargerKw')) || 11,
+
+  // Tariff configuration (all øre/kWh ekskl. moms unless noted)
+  nrgiTillaeg: parseFloat(localStorage.getItem('nrgiTillaeg')) || 9,
+  energinet: parseFloat(localStorage.getItem('energinet')) || 7.0,
+  elafgift: parseFloat(localStorage.getItem('elafgift')) || 0.8,
   vat: parseFloat(localStorage.getItem('vat')) || 25,
+
+  // Cerius DK2 tariffs (øre/kWh ekskl. moms)
+  cw_lav: parseFloat(localStorage.getItem('cw_lav')) || 13,
+  cw_hoj: parseFloat(localStorage.getItem('cw_hoj')) || 40,
+  cw_spids: parseFloat(localStorage.getItem('cw_spids')) || 120,
+  cs_lav: parseFloat(localStorage.getItem('cs_lav')) || 13,
+  cs_hoj: parseFloat(localStorage.getItem('cs_hoj')) || 20,
+
   voiceURI: localStorage.getItem('voiceURI') || '',
   ttsRate: parseFloat(localStorage.getItem('ttsRate')) || 0.85,
+
   sources: {},
   loaded: false
 };
 
 // ============================================================
-// HELPERS
+// PRIS-BEREGNING — Cerius DK2 tarif-system
 // ============================================================
-function applyTariffs(spotPrice) {
-  return (spotPrice + STATE.surcharge) * (1 + STATE.vat / 100);
+function getCeriusTariff(date) {
+  // Returns øre/kWh ekskl. moms based on time and season
+  const month = date.getMonth(); // 0=jan, 11=dec
+  const hour = date.getHours();
+  const isWinter = (month >= 9 || month <= 2); // okt-mar (måned 9-11 og 0-2)
+
+  if (isWinter) {
+    if (hour >= 0 && hour < 6) return STATE.cw_lav;
+    if (hour >= 17 && hour < 21) return STATE.cw_spids;
+    return STATE.cw_hoj; // 06-17 + 21-24
+  } else {
+    if (hour >= 0 && hour < 6) return STATE.cs_lav;
+    return STATE.cs_hoj; // 06-24, ingen spidslast om sommeren
+  }
 }
 
-function formatPrice(kr) { return kr.toFixed(2).replace('.', ',') + ' kr'; }
+function getTariffPeriod(date) {
+  const month = date.getMonth();
+  const hour = date.getHours();
+  const isWinter = (month >= 9 || month <= 2);
+  if (hour >= 0 && hour < 6) return 'lavlast';
+  if (isWinter && hour >= 17 && hour < 21) return 'spidslast';
+  return 'højlast';
+}
+
+// Convert raw spot price (kr/kWh ekskl. moms) to total consumer price (kr/kWh inkl. moms)
+function calculateTotalPrice(rawSpotKwh, date) {
+  const ceriusOre = getCeriusTariff(date); // øre/kWh ekskl. moms
+  const totalEksMoms =
+    rawSpotKwh +
+    (ceriusOre / 100) +
+    (STATE.energinet / 100) +
+    (STATE.elafgift / 100) +
+    (STATE.nrgiTillaeg / 100);
+  return totalEksMoms * (1 + STATE.vat / 100);
+}
+
+function priceComponents(rawSpotKwh, date) {
+  const ceriusOre = getCeriusTariff(date);
+  const components = {
+    spot: rawSpotKwh,
+    cerius: ceriusOre / 100,
+    energinet: STATE.energinet / 100,
+    elafgift: STATE.elafgift / 100,
+    nrgi: STATE.nrgiTillaeg / 100,
+  };
+  const subtotal = Object.values(components).reduce((s, v) => s + v, 0);
+  components.subtotal = subtotal;
+  components.moms = subtotal * (STATE.vat / 100);
+  components.total = subtotal * (1 + STATE.vat / 100);
+  components.period = getTariffPeriod(date);
+  return components;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt(n, dec = 2) { return n.toFixed(dec).replace('.', ','); }
 function formatPriceShort(kr) { return kr.toFixed(2).replace('.', ','); }
 function formatTime(date) { return date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }); }
 function formatDayName(date) {
@@ -482,8 +625,7 @@ function formatDayName(date) {
   return `${days[date.getDay()]} ${date.getDate()}. ${months[date.getMonth()]}`;
 }
 function formatDayNameLong(date) {
-  const days = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
-  return days[date.getDay()];
+  return ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'][date.getDay()];
 }
 
 function categorize(price, allPrices) {
@@ -505,11 +647,9 @@ function getCurrentSoc() {
 
 function setCurrentSoc(val) {
   if (STATE.selectedCar === 'kona') {
-    STATE.socKona = val;
-    localStorage.setItem('socKona', val);
+    STATE.socKona = val; localStorage.setItem('socKona', val);
   } else {
-    STATE.socEx60 = val;
-    localStorage.setItem('socEx60', val);
+    STATE.socEx60 = val; localStorage.setItem('socEx60', val);
   }
 }
 
@@ -521,7 +661,7 @@ function carNeedsKwh() {
 }
 
 function carNeedsHours() {
-  return carNeedsKwh() / CARS[STATE.selectedCar].power;
+  return carNeedsKwh() / STATE.chargerKw;
 }
 
 // ============================================================
@@ -535,13 +675,16 @@ async function fetchSpot(date) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`spot ${res.status}`);
   const data = await res.json();
-  return data.map(p => ({
-    time: new Date(p.time_start),
-    raw: p.DKK_per_kWh,
-    total: applyTariffs(p.DKK_per_kWh),
-    forecast: false,
-    confidence: 100,
-  }));
+  return data.map(p => {
+    const t = new Date(p.time_start);
+    return {
+      time: t,
+      raw: p.DKK_per_kWh,
+      total: calculateTotalPrice(p.DKK_per_kWh, t),
+      forecast: false,
+      confidence: 100,
+    };
+  });
 }
 
 async function fetchCarnot() {
@@ -555,11 +698,11 @@ async function fetchCarnot() {
     const dayDiff = Math.floor((d - now) / 86400000);
     const ageHours = (now - new Date(p.addedtime)) / 3600000;
     const confidence = Math.max(40, Math.round(82 - dayDiff * 5 - ageHours / 12));
-    const raw = p.prediction / 1000;
+    const raw = p.prediction / 1000; // Carnot returns DKK/MWh
     return {
       time: d,
       raw,
-      total: applyTariffs(raw),
+      total: calculateTotalPrice(raw, d),
       forecast: true,
       confidence,
     };
@@ -579,9 +722,7 @@ async function loadAll() {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  STATE.prices.today = [];
-  STATE.prices.tomorrow = [];
-  STATE.prices.forecast = [];
+  STATE.prices.today = []; STATE.prices.tomorrow = []; STATE.prices.forecast = [];
 
   try {
     STATE.prices.today = await fetchSpot(today);
@@ -604,23 +745,27 @@ async function loadAll() {
   } catch (e) { STATE.sources.wind = { name: 'open-meteo', status: 'fail' }; }
 }
 
+// Recalculate all totals if tariffs change
+function recalculateAllPrices() {
+  [STATE.prices.today, STATE.prices.tomorrow, STATE.prices.forecast].forEach(arr => {
+    arr.forEach(p => p.total = calculateTotalPrice(p.raw, p.time));
+  });
+}
+
 // ============================================================
 // CHARGING PLAN — single car only
 // ============================================================
 function buildAllHours() {
   const all = [...STATE.prices.today, ...STATE.prices.tomorrow];
-  // Add Carnot forecast for hours not already covered
   const existingTimes = new Set(all.map(p => p.time.getTime()));
   STATE.prices.forecast.forEach(p => {
     if (!existingTimes.has(p.time.getTime())) all.push(p);
   });
   all.sort((a, b) => a.time - b.time);
 
-  // Categorize all visible prices together for consistent coloring
   const totals = all.map(p => p.total);
   all.forEach(p => p.category = categorize(p.total, totals));
 
-  // Attach wind data
   if (STATE.wind && STATE.wind.hourly) {
     const windTimes = STATE.wind.hourly.time;
     const wind100 = STATE.wind.hourly.wind_speed_100m;
@@ -631,7 +776,6 @@ function buildAllHours() {
       if (idx !== -1) p.wind100 = wind100[idx];
     });
   }
-
   return all;
 }
 
@@ -646,7 +790,7 @@ function planCharging() {
 
   const car = CARS[STATE.selectedCar];
 
-  // Best contiguous window
+  // Best contiguous
   let best = null;
   for (let i = 0; i <= future.length - hoursNeeded; i++) {
     const window = future.slice(i, i + hoursNeeded);
@@ -662,22 +806,17 @@ function planCharging() {
     }
   }
 
-  // Best split (cheapest N hours overall)
+  // Best split
   const cheapest = [...future].sort((a, b) => a.total - b.total).slice(0, hoursNeeded);
   cheapest.sort((a, b) => a.time - b.time);
   const splitAvg = cheapest.reduce((s, p) => s + p.total, 0) / cheapest.length;
 
-  // Group cheapest into contiguous blocks
   const blocks = [];
   let block = [cheapest[0]];
   for (let i = 1; i < cheapest.length; i++) {
     const diff = cheapest[i].time - cheapest[i-1].time;
-    if (diff <= 3600000 + 1000) {
-      block.push(cheapest[i]);
-    } else {
-      blocks.push(block);
-      block = [cheapest[i]];
-    }
+    if (diff <= 3600000 + 1000) block.push(cheapest[i]);
+    else { blocks.push(block); block = [cheapest[i]]; }
   }
   blocks.push(block);
 
@@ -692,12 +831,10 @@ function planCharging() {
     })),
   };
 
-  // Cost calculations
   const totalKwh = car.battery * (STATE.targetSoc - getCurrentSoc()) / 100;
   best.totalCost = best.avg * totalKwh;
   split.totalCost = split.avg * totalKwh;
 
-  // Worst case for savings reference
   let worstAvg = 0;
   for (let i = 0; i <= future.length - hoursNeeded; i++) {
     const window = future.slice(i, i + hoursNeeded);
@@ -714,7 +851,7 @@ function planCharging() {
 }
 
 // ============================================================
-// SVG CHART RENDERING
+// CHART RENDERING
 // ============================================================
 function renderHourlyChart(svgId, prices, isToday, selectedHours) {
   const svg = document.getElementById(svgId);
@@ -722,8 +859,7 @@ function renderHourlyChart(svgId, prices, isToday, selectedHours) {
   if (!prices || prices.length === 0) {
     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     txt.setAttribute('x', 240); txt.setAttribute('y', 85);
-    txt.setAttribute('text-anchor', 'middle');
-    txt.setAttribute('fill', '#9a9a9e');
+    txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('fill', '#9a9a9e');
     txt.setAttribute('font-size', '13');
     txt.textContent = 'Priserne kommer kl. 13';
     svg.appendChild(txt);
@@ -737,9 +873,7 @@ function renderHourlyChart(svgId, prices, isToday, selectedHours) {
 
   const allTotals = prices.map(p => p.total);
   const maxPrice = Math.max(...allTotals) * 1.05;
-  const minPrice = 0;
 
-  // Baseline grid
   const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   gridLine.setAttribute('x1', padL); gridLine.setAttribute('x2', W - padR);
   gridLine.setAttribute('y1', padTop + chartH); gridLine.setAttribute('y2', padTop + chartH);
@@ -756,21 +890,16 @@ function renderHourlyChart(svgId, prices, isToday, selectedHours) {
 
   prices.forEach((p, i) => {
     const x = padL + i * barW + gap / 2;
-    const barHeight = ((p.total - minPrice) / (maxPrice - minPrice)) * chartH;
+    const barHeight = (p.total / maxPrice) * chartH;
     const y = padTop + chartH - barHeight;
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', x);
-    rect.setAttribute('y', y);
-    rect.setAttribute('width', actualBarW);
-    rect.setAttribute('height', barHeight);
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', actualBarW); rect.setAttribute('height', barHeight);
     rect.setAttribute('fill', categoryFill(p.category));
     rect.setAttribute('rx', '1');
     rect.classList.add('bar');
-    if (p.forecast) {
-      rect.setAttribute('fill-opacity', '0.55');
-      rect.classList.add('forecast');
-    }
+    if (p.forecast) rect.setAttribute('fill-opacity', '0.55');
 
     if (isToday && p.time.getHours() === currentHour && p.time.toDateString() === now.toDateString()) {
       rect.classList.add('now');
@@ -779,54 +908,41 @@ function renderHourlyChart(svgId, prices, isToday, selectedHours) {
     rect.addEventListener('click', (e) => showTooltip(e, p));
     rect.addEventListener('mouseenter', (e) => showTooltip(e, p));
     rect.addEventListener('mouseleave', hideTooltip);
-
     svg.appendChild(rect);
 
-    // Charge marker (blue underline)
     if (selectedHours && selectedHours.some(h => h.time.getTime() === p.time.getTime())) {
       const marker = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      marker.setAttribute('x', x);
-      marker.setAttribute('y', padTop + chartH + 2);
-      marker.setAttribute('width', actualBarW);
-      marker.setAttribute('height', 3);
-      marker.setAttribute('fill', '#3b82f6');
-      marker.setAttribute('rx', '1.5');
+      marker.setAttribute('x', x); marker.setAttribute('y', padTop + chartH + 2);
+      marker.setAttribute('width', actualBarW); marker.setAttribute('height', 3);
+      marker.setAttribute('fill', '#3b82f6'); marker.setAttribute('rx', '1.5');
       svg.appendChild(marker);
     }
   });
 
-  // Hour labels
-  const hours = [0, 6, 12, 18];
-  hours.forEach(h => {
+  [0, 6, 12, 18].forEach(h => {
     const idx = prices.findIndex(p => p.time.getHours() === h);
     if (idx === -1) return;
     const x = padL + idx * barW + barW / 2;
     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    txt.setAttribute('x', x);
-    txt.setAttribute('y', H - 10);
-    txt.setAttribute('text-anchor', 'middle');
-    txt.setAttribute('fill', '#9a9a9e');
+    txt.setAttribute('x', x); txt.setAttribute('y', H - 10);
+    txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('fill', '#9a9a9e');
     txt.setAttribute('font-size', '11');
     txt.textContent = String(h).padStart(2, '0');
     svg.appendChild(txt);
-  });
 
-  // Vertical guides
-  hours.forEach(h => {
-    if (h === 0) return;
-    const idx = prices.findIndex(p => p.time.getHours() === h);
-    if (idx === -1) return;
-    const x = padL + idx * barW;
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x); line.setAttribute('x2', x);
-    line.setAttribute('y1', padTop); line.setAttribute('y2', padTop + chartH);
-    line.setAttribute('stroke', '#2e2e32'); line.setAttribute('stroke-width', '0.5');
-    line.setAttribute('stroke-dasharray', '2,3');
-    svg.appendChild(line);
+    if (h !== 0) {
+      const lineX = padL + idx * barW;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', lineX); line.setAttribute('x2', lineX);
+      line.setAttribute('y1', padTop); line.setAttribute('y2', padTop + chartH);
+      line.setAttribute('stroke', '#2e2e32'); line.setAttribute('stroke-width', '0.5');
+      line.setAttribute('stroke-dasharray', '2,3');
+      svg.appendChild(line);
+    }
   });
 }
 
-function renderDailyChart(svgId, dailyData, valueKey, unit) {
+function renderDailyChart(svgId, dailyData, valueKey) {
   const svg = document.getElementById(svgId);
   svg.innerHTML = '';
   if (!dailyData || dailyData.length === 0) return;
@@ -840,7 +956,6 @@ function renderDailyChart(svgId, dailyData, valueKey, unit) {
   const minV = Math.min(...values);
   const maxV = Math.max(...values);
 
-  // Categorize per-day for traffic-light
   const sorted = [...values].sort((a, b) => a - b);
   const q1 = sorted[Math.floor(sorted.length * 0.33)];
   const q3 = sorted[Math.floor(sorted.length * 0.67)];
@@ -857,13 +972,12 @@ function renderDailyChart(svgId, dailyData, valueKey, unit) {
   const gap = barW * 0.18;
   const actualBarW = barW - gap;
   const now = new Date();
-
   const cheapestIdx = values.indexOf(minV);
 
   dailyData.forEach((d, i) => {
     const x = padL + i * barW + gap / 2;
     const v = d[valueKey];
-    const barHeight = ((v - 0) / (maxV * 1.1)) * chartH;
+    const barHeight = (v / (maxV * 1.1)) * chartH;
     const y = baseline - barHeight;
 
     let cat = 'mid';
@@ -872,21 +986,16 @@ function renderDailyChart(svgId, dailyData, valueKey, unit) {
     const fill = categoryFill(cat);
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', x);
-    rect.setAttribute('y', y);
-    rect.setAttribute('width', actualBarW);
-    rect.setAttribute('height', barHeight);
-    rect.setAttribute('fill', fill);
-    rect.setAttribute('rx', '2');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', actualBarW); rect.setAttribute('height', barHeight);
+    rect.setAttribute('fill', fill); rect.setAttribute('rx', '2');
     if (d.forecast) {
       rect.setAttribute('fill-opacity', '0.55');
-      rect.setAttribute('stroke', fill);
-      rect.setAttribute('stroke-width', '1');
+      rect.setAttribute('stroke', fill); rect.setAttribute('stroke-width', '1');
       rect.setAttribute('stroke-dasharray', '3,2');
     }
     svg.appendChild(rect);
 
-    // Value label
     const valTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     valTxt.setAttribute('x', x + actualBarW / 2);
     valTxt.setAttribute('y', y - 4);
@@ -896,19 +1005,16 @@ function renderDailyChart(svgId, dailyData, valueKey, unit) {
     valTxt.textContent = v.toFixed(valueKey === 'avgWind' ? 1 : 2).replace('.', ',');
     svg.appendChild(valTxt);
 
-    // Star marker for cheapest/lowest
     if (i === cheapestIdx) {
       const star = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       star.setAttribute('x', x + actualBarW / 2);
       star.setAttribute('y', y - 14);
       star.setAttribute('text-anchor', 'middle');
-      star.setAttribute('fill', '#4ec968');
-      star.setAttribute('font-size', '11');
+      star.setAttribute('fill', '#4ec968'); star.setAttribute('font-size', '11');
       star.textContent = '★';
       svg.appendChild(star);
     }
 
-    // Day label
     const isToday = d.date.toDateString() === now.toDateString();
     const dayLabel = isToday ? 'I dag' : ['søn','man','tir','ons','tor','fre','lør'][d.date.getDay()];
     const labelTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -942,16 +1048,12 @@ function buildDailyData() {
     if (h.wind100 != null) byDay[key].winds.push(h.wind100);
     if (h.forecast) byDay[key].forecast = true;
   });
-
-  return Object.values(byDay)
-    .filter(d => d.prices.length > 0)
-    .slice(0, 7)
-    .map(d => ({
-      date: d.date,
-      avgPrice: d.prices.reduce((s, x) => s + x, 0) / d.prices.length,
-      avgWind: d.winds.length ? d.winds.reduce((s, x) => s + x, 0) / d.winds.length : 0,
-      forecast: d.forecast,
-    }));
+  return Object.values(byDay).filter(d => d.prices.length > 0).slice(0, 7).map(d => ({
+    date: d.date,
+    avgPrice: d.prices.reduce((s, x) => s + x, 0) / d.prices.length,
+    avgWind: d.winds.length ? d.winds.reduce((s, x) => s + x, 0) / d.winds.length : 0,
+    forecast: d.forecast,
+  }));
 }
 
 function buildWindOnlyData() {
@@ -964,15 +1066,11 @@ function buildWindOnlyData() {
     const v = STATE.wind.hourly.wind_speed_100m[i];
     if (v != null) byDay[key].winds.push(v);
   });
-  const now = new Date();
-  return Object.values(byDay)
-    .filter(d => d.winds.length > 0)
-    .slice(0, 7)
-    .map((d, i) => ({
-      date: d.date,
-      avgWind: d.winds.reduce((s, x) => s + x, 0) / d.winds.length,
-      forecast: i >= 2,
-    }));
+  return Object.values(byDay).filter(d => d.winds.length > 0).slice(0, 7).map((d, i) => ({
+    date: d.date,
+    avgWind: d.winds.reduce((s, x) => s + x, 0) / d.winds.length,
+    forecast: i >= 2,
+  }));
 }
 
 // ============================================================
@@ -981,31 +1079,57 @@ function buildWindOnlyData() {
 function showTooltip(event, p) {
   const tip = document.getElementById('tooltip');
   const hour = String(p.time.getHours()).padStart(2,'0');
-  const fc = p.forecast ? ` <span>· ${p.confidence}%</span>` : '';
-  tip.innerHTML = `<strong>${hour}:00</strong> · <span>${formatPrice(p.total)}/kWh</span>${fc}`;
+  const c = priceComponents(p.raw, p.time);
+  const fc = p.forecast ? ` <span>· prognose ${p.confidence}%</span>` : '';
+  tip.innerHTML = `<strong>${hour}:00</strong> · <span>${formatPriceShort(p.total)} kr/kWh</span> · <span>${c.period}</span>${fc}`;
   tip.style.display = 'block';
   const rect = event.target.getBoundingClientRect();
   tip.style.left = (rect.left + rect.width/2) + 'px';
   tip.style.top = (rect.top + window.scrollY) + 'px';
-  setTimeout(hideTooltip, 2500);
+  setTimeout(hideTooltip, 3000);
 }
 function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
 
 // ============================================================
 // MAIN RENDER
 // ============================================================
+function renderTariffInfo() {
+  const now = new Date();
+  const period = getTariffPeriod(now);
+  const ceriusRate = getCeriusTariff(now);
+  const month = now.getMonth();
+  const isWinter = (month >= 9 || month <= 2);
+
+  // Find current price for breakdown
+  const currentPrice = STATE.prices.today.find(p =>
+    p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
+  );
+
+  let html = `
+    <div class="row"><span><strong>${period.charAt(0).toUpperCase() + period.slice(1)}</strong> · ${isWinter ? 'vinter' : 'sommer'}-tarif</span>
+    <span>Cerius: ${ceriusRate.toFixed(1)} øre/kWh</span></div>
+  `;
+
+  if (currentPrice) {
+    const c = priceComponents(currentPrice.raw, now);
+    html += `<div class="row" style="margin-top:4px"><span>Spot ${fmt(c.spot)} + Cerius ${fmt(c.cerius)} + Energinet ${fmt(c.energinet)} + NRGi ${fmt(c.nrgi)} + Afgift ${fmt(c.elafgift)} + ${STATE.vat}% moms</span></div>`;
+    html += `<div class="row" style="margin-top:2px"><span><strong>= ${fmt(c.total)} kr/kWh</strong> inkl. alt</span></div>`;
+  }
+  document.getElementById('tariff-info').innerHTML = html;
+}
+
 function render() {
   const now = new Date();
   document.getElementById('now-time').textContent = formatTime(now);
   document.getElementById('now-date').textContent = formatDayName(now);
 
-  // SoC display
   document.getElementById('soc-car-name').textContent = CARS[STATE.selectedCar].name;
-  const socInput = document.getElementById('soc-input');
-  socInput.value = getCurrentSoc();
-  document.getElementById('soc-display').textContent = `${getCurrentSoc()}% → ${STATE.targetSoc}% (${carNeedsKwh().toFixed(0)} kWh / ${carNeedsHours().toFixed(1)} t)`;
+  document.getElementById('soc-input').value = getCurrentSoc();
+  document.getElementById('soc-display').textContent =
+    `${getCurrentSoc()}% → ${STATE.targetSoc}% (${carNeedsKwh().toFixed(0)} kWh / ${carNeedsHours().toFixed(1)} t)`;
 
-  // Pris nu card
+  renderTariffInfo();
+
   const currentPrice = STATE.prices.today.find(p =>
     p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
   );
@@ -1020,14 +1144,11 @@ function render() {
       cat === 'low' ? 'Billigt — god ladetid' : cat === 'high' ? 'Dyrt — undgå' : 'Middel';
   }
 
-  // Billigst frem card — find cheapest hour ahead
   const allHours = buildAllHours();
   const future = allHours.filter(p => p.time >= now);
   if (future.length > 0) {
     const cheapest = [...future].sort((a, b) => a.total - b.total)[0];
     document.getElementById('price-low').textContent = formatPriceShort(cheapest.total);
-    const isToday = cheapest.time.toDateString() === now.toDateString();
-    const dayLabel = isToday ? 'i dag' : 'i morgen';
     const moreSpecific = cheapest.time.toDateString() === now.toDateString()
       ? `i dag kl. ${formatTime(cheapest.time)}`
       : cheapest.time.toDateString() === new Date(now.getTime() + 86400000).toDateString()
@@ -1036,10 +1157,8 @@ function render() {
     document.getElementById('price-low-when').textContent = moreSpecific;
   }
 
-  // Recommendation
   renderRecommendation();
 
-  // Today / Tomorrow charts
   const todayData = STATE.prices.today;
   const tomorrowData = STATE.prices.tomorrow;
   document.getElementById('day1-label').textContent = todayData[0] ? formatDayName(todayData[0].time) : '–';
@@ -1049,30 +1168,26 @@ function render() {
     const totals = todayData.map(p => p.total);
     todayData.forEach(p => p.category = categorize(p.total, totals));
     document.getElementById('day1-stats').textContent =
-      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr/kWh`;
+      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr`;
   }
-
   if (tomorrowData.length > 0) {
     const totals = tomorrowData.map(p => p.total);
     tomorrowData.forEach(p => p.category = categorize(p.total, totals));
     document.getElementById('day2-stats').textContent =
-      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr/kWh`;
+      `min ${formatPriceShort(Math.min(...totals))} · max ${formatPriceShort(Math.max(...totals))} kr`;
   }
 
   const plan = planCharging();
   const selectedHours = plan ? (plan.recommendSplit ? plan.split.hours : plan.best.hours) : [];
-
   renderHourlyChart('chart-today', todayData, true, selectedHours);
   renderHourlyChart('chart-tomorrow', tomorrowData, false, selectedHours);
 
-  // Weekly daily charts
   const dailyData = buildDailyData();
-  renderDailyChart('chart-week', dailyData, 'avgPrice', 'kr/kWh');
+  renderDailyChart('chart-week', dailyData, 'avgPrice');
 
   const windData = buildWindOnlyData();
-  renderDailyChart('chart-wind', windData, 'avgWind', 'm/s');
+  renderDailyChart('chart-wind', windData, 'avgWind');
 
-  // Sources
   const sourcesEl = document.getElementById('sources');
   sourcesEl.innerHTML = '';
   Object.values(STATE.sources).forEach(s => {
@@ -1099,22 +1214,14 @@ function renderRecommendation() {
   const formatBlock = (b) => {
     const dayName = formatDayNameLong(b.start);
     const isWeekend = b.start.getDay() === 0 || b.start.getDay() === 6;
-    return {
-      when: `${dayName} kl. ${formatTime(b.start)}–${formatTime(b.end)}`,
-      isWeekend,
-      hoursCount: b.hoursCount,
-      avgWind: b.avgWind,
-    };
+    return { when: `${dayName} kl. ${formatTime(b.start)}–${formatTime(b.end)}`, isWeekend, hoursCount: b.hoursCount, avgWind: b.avgWind };
   };
 
   const bestBlock = formatBlock({ start: plan.best.start, end: plan.best.end, hoursCount: plan.hoursNeeded, avgWind: plan.best.avgWind });
-  const bestIsWeekend = bestBlock.isWeekend;
 
   let optionsHtml = '';
-
-  // Option 1: Best contiguous
   const bestTags = [];
-  bestTags.push(`<span class="badge ${bestIsWeekend ? 'weekend' : 'weekday'}">${bestIsWeekend ? 'Weekend ✓' : 'Hverdag — kræver hjemme'}</span>`);
+  bestTags.push(`<span class="badge ${bestBlock.isWeekend ? 'weekend' : 'weekday'}">${bestBlock.isWeekend ? 'Weekend ✓' : 'Hverdag — kræver hjemme'}</span>`);
   if (plan.best.avgWind > 10) bestTags.push(`<span class="badge wind">💨 ${plan.best.avgWind.toFixed(1)} m/s</span>`);
 
   optionsHtml += `
@@ -1131,7 +1238,6 @@ function renderRecommendation() {
     </div>
   `;
 
-  // Option 2: Split (only if it saves >5kr)
   if (plan.recommendSplit) {
     const splitBlocksHtml = plan.split.blocks.map(b => {
       const fb = formatBlock(b);
@@ -1145,7 +1251,6 @@ function renderRecommendation() {
         </div>
       `;
     }).join('');
-
     optionsHtml += `
       <div class="option best">
         <div class="opt-head">
@@ -1176,14 +1281,12 @@ function loadVoices() {
   availableVoices = window.speechSynthesis.getVoices();
   const select = document.getElementById('voiceSelect');
   if (!select) return;
-
   const sorted = [...availableVoices].sort((a, b) => {
     const aDa = a.lang.startsWith('da') ? 0 : a.lang.startsWith('en') ? 1 : 2;
     const bDa = b.lang.startsWith('da') ? 0 : b.lang.startsWith('en') ? 1 : 2;
     if (aDa !== bDa) return aDa - bDa;
     return a.name.localeCompare(b.name);
   });
-
   select.innerHTML = '<option value="">Auto (bedst dansk)</option>' +
     sorted.map(v => {
       const flag = v.lang.startsWith('da') ? '🇩🇰 ' : v.lang.startsWith('en') ? '🇬🇧 ' : '';
@@ -1212,7 +1315,7 @@ function buildSpeechText() {
     p.time.getHours() === now.getHours() && p.time.toDateString() === now.toDateString()
   );
   if (currentPrice) {
-    parts.push(`Aktuel elpris i Næstved: ${formatPriceShort(currentPrice.total)} kroner per kilowatt-time.`);
+    parts.push(`Aktuel elpris i Næstved: ${formatPriceShort(currentPrice.total)} kroner per kilowatt-time inklusive alle afgifter og moms.`);
   }
 
   if (carNeedsKwh() <= 0) {
@@ -1258,33 +1361,22 @@ function buildSpeechText() {
 }
 
 function speak(textOverride) {
-  if (!('speechSynthesis' in window)) {
-    alert('Tekst-til-tale er ikke tilgængelig i denne browser.');
-    return;
-  }
-
+  if (!('speechSynthesis' in window)) { alert('Tekst-til-tale er ikke tilgængelig.'); return; }
   const btn = document.getElementById('speak-btn');
   if (isSpeaking) {
     window.speechSynthesis.cancel();
-    isSpeaking = false;
-    btn.classList.remove('speaking');
+    isSpeaking = false; btn.classList.remove('speaking');
     return;
   }
-
   const text = textOverride || buildSpeechText();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'da-DK';
-  utterance.rate = STATE.ttsRate;
-  utterance.pitch = 1.0;
-
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'da-DK'; u.rate = STATE.ttsRate; u.pitch = 1.0;
   const voice = pickVoice();
-  if (voice) utterance.voice = voice;
-
-  utterance.onstart = () => { isSpeaking = true; btn.classList.add('speaking'); };
-  utterance.onend = () => { isSpeaking = false; btn.classList.remove('speaking'); };
-  utterance.onerror = () => { isSpeaking = false; btn.classList.remove('speaking'); };
-
-  window.speechSynthesis.speak(utterance);
+  if (voice) u.voice = voice;
+  u.onstart = () => { isSpeaking = true; btn.classList.add('speaking'); };
+  u.onend = () => { isSpeaking = false; btn.classList.remove('speaking'); };
+  u.onerror = () => { isSpeaking = false; btn.classList.remove('speaking'); };
+  window.speechSynthesis.speak(u);
 }
 
 // ============================================================
@@ -1323,17 +1415,23 @@ document.getElementById('soc-input').addEventListener('change', (e) => {
   }
 });
 
-['targetSoc', 'surcharge', 'vat', 'ttsRate'].forEach(id => {
+// All tariff settings — recalculate prices when changed
+const TARIFF_KEYS = ['nrgiTillaeg', 'energinet', 'elafgift', 'vat', 'cw_lav', 'cw_hoj', 'cw_spids', 'cs_lav', 'cs_hoj'];
+TARIFF_KEYS.forEach(id => {
   document.getElementById(id).addEventListener('change', (e) => {
     const val = parseFloat(e.target.value);
     STATE[id] = val;
     localStorage.setItem(id, val);
-    // Recalculate prices with new tariff
-    if (id === 'surcharge' || id === 'vat') {
-      [...STATE.prices.today, ...STATE.prices.tomorrow, ...STATE.prices.forecast].forEach(p => {
-        p.total = applyTariffs(p.raw);
-      });
-    }
+    recalculateAllPrices();
+    render();
+  });
+});
+
+['targetSoc', 'chargerKw', 'ttsRate'].forEach(id => {
+  document.getElementById(id).addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    STATE[id] = val;
+    localStorage.setItem(id, val);
     render();
   });
 });
@@ -1344,7 +1442,7 @@ document.getElementById('voiceSelect').addEventListener('change', (e) => {
 });
 
 document.getElementById('ttsTestBtn').addEventListener('click', () => {
-  speak('Hej Benny. Dette er en test af stemmen. Hvis udtalen er klar, kan du bruge denne stemme til oplæsning af lade-planen.');
+  speak('Hej Benny. Dette er en test af stemmen.');
 });
 
 if ('speechSynthesis' in window) {
@@ -1352,13 +1450,13 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-// Init settings inputs
-document.getElementById('targetSoc').value = STATE.targetSoc;
-document.getElementById('surcharge').value = STATE.surcharge;
-document.getElementById('vat').value = STATE.vat;
-document.getElementById('ttsRate').value = STATE.ttsRate;
+// Init settings inputs from STATE
+['targetSoc', 'chargerKw', 'nrgiTillaeg', 'energinet', 'elafgift', 'vat',
+ 'cw_lav', 'cw_hoj', 'cw_spids', 'cs_lav', 'cs_hoj', 'ttsRate'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.value = STATE[id];
+});
 
-// Set active car button
 document.querySelectorAll('.car-toggle button').forEach(b => {
   b.classList.toggle('active', b.dataset.car === STATE.selectedCar);
 });
@@ -1373,8 +1471,6 @@ document.querySelectorAll('.car-toggle button').forEach(b => {
     document.getElementById('content').style.display = 'block';
     STATE.loaded = true;
     render();
-
-    // Auto-refresh time every minute
     setInterval(() => {
       const now = new Date();
       document.getElementById('now-time').textContent = formatTime(now);
@@ -1382,7 +1478,7 @@ document.querySelectorAll('.car-toggle button').forEach(b => {
   } catch (e) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error').style.display = 'block';
-    document.getElementById('error').textContent = `Fejl ved indlæsning: ${e.message}`;
+    document.getElementById('error').textContent = `Fejl: ${e.message}`;
     console.error(e);
   }
 })();
